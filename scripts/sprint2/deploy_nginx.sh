@@ -2,9 +2,9 @@
 set -e
 
 usage() {
-    echo "Usage: $0 [path_to_frontend]"
-    echo "If no path is provided, it defaults to a directory named 'frontend' in the current location."
-    echo "Ensure the 'frontend' directory exists and contains your front-end files."
+    echo "Usage: $0 [url_to_frontend_archive]"
+    echo "If no URL is provided, it defaults to downloading a predefined front-end archive."
+    echo "Ensure the URL points to a valid front-end archive (e.g., .zip or .tar.gz)."
     exit 1
 }
 
@@ -12,8 +12,7 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     usage
 fi
 
-# Get the front-end directory from the first argument, default to 'frontend'
-FRONTEND_DIR=${1:-frontend}
+FRONTEND_URL=${1:-"https://example.com/path/to/default/frontend.zip"}
 
 detect_package_manager() {
     if command -v apt-get &> /dev/null; then
@@ -58,23 +57,94 @@ install_nginx() {
     esac
 }
 
+check_downloader() {
+    if command -v curl &> /dev/null; then
+        DOWNLOADER="curl"
+    elif command -v wget &> /dev/null; then
+        DOWNLOADER="wget"
+    else
+        echo "Neither curl nor wget is installed. Installing curl..."
+        install_downloader
+    fi
+}
+
+install_downloader() {
+    local pkg_manager=$(detect_package_manager)
+
+    case $pkg_manager in
+        apt)
+            sudo apt-get update -y
+            sudo apt-get install -y curl
+            ;;
+        dnf)
+            sudo dnf install -y curl
+            ;;
+        yum)
+            sudo yum install -y curl
+            ;;
+        zypper)
+            sudo zypper refresh
+            sudo zypper install -y curl
+            ;;
+        *)
+            echo "Unsupported package manager. Please install curl or wget manually."
+            exit 1
+            ;;
+    esac
+
+    if command -v curl &> /dev/null; then
+        DOWNLOADER="curl"
+    elif command -v wget &> /dev/null; then
+        DOWNLOADER="wget"
+    else
+        echo "Failed to install curl or wget. Please install manually."
+        exit 1
+    fi
+}
+
+download_and_extract_frontend() {
+    local url=$1
+    local temp_dir
+    temp_dir=$(mktemp -d)
+    local archive_name="$temp_dir/frontend_archive"
+
+    echo "Downloading front-end archive from $url..."
+
+    if [[ "$DOWNLOADER" == "curl" ]]; then
+        curl -L "$url" -o "$archive_name"
+    else
+        wget "$url" -O "$archive_name"
+    fi
+
+    echo "Download complete. Extracting archive..."
+
+    # Determine archive type and extract accordingly
+    if [[ "$archive_name" == *.zip ]]; then
+        sudo apt-get install -y unzip || sudo yum install -y unzip || sudo dnf install -y unzip || sudo zypper install -y unzip
+        unzip "$archive_name" -d "$temp_dir/extracted"
+    elif [[ "$archive_name" == *.tar.gz || "$archive_name" == *.tgz ]]; then
+        tar -xzf "$archive_name" -C "$temp_dir/extracted"
+    else
+        echo "Unsupported archive format. Please provide a .zip or .tar.gz archive."
+        exit 1
+    fi
+
+    FRONTEND_SOURCE_DIR=$(find "$temp_dir/extracted" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+
+    if [[ -z "$FRONTEND_SOURCE_DIR" ]]; then
+        echo "Failed to locate extracted front-end directory."
+        exit 1
+    fi
+
+    echo "Front-end extracted to $FRONTEND_SOURCE_DIR"
+
+    # Export the temp directory path for cleanup
+    TEMP_DIR_PATH="$temp_dir"
+}
+
 deploy_frontend() {
     local frontend_source=$1
     local nginx_root="/var/www/html"
-
-    # Check if front-end source exists
-    if [[ ! -d "$frontend_source" ]]; then
-        echo "Front-end directory '$frontend_source' does not exist."
-        echo "Please provide a valid front-end directory or ensure the default 'frontend' directory exists."
-        exit 1
-    fi
-
-    # Check if the front-end directory is not empty
-    if [[ -z "$(ls -A "$frontend_source")" ]]; then
-        echo "Front-end directory '$frontend_source' is empty."
-        echo "Please provide a directory with your front-end files."
-        exit 1
-    fi
 
     echo "Deploying front-end from '$frontend_source' to '$nginx_root'..."
 
@@ -130,7 +200,7 @@ validate_setup() {
 
     sleep 2
 
-    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost)
+    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost || wget -q --spider http://localhost && echo "200" || echo "000")
 
     if [[ "$HTTP_STATUS" == "200" ]]; then
         echo "Validation successful: Nginx is serving content correctly at http://localhost"
@@ -139,6 +209,16 @@ validate_setup() {
         exit 1
     fi
 }
+
+cleanup() {
+    if [[ -n "$TEMP_DIR_PATH" && -d "$TEMP_DIR_PATH" ]]; then
+        sudo rm -rf "$TEMP_DIR_PATH"
+        echo "Cleaned up temporary files."
+    fi
+}
+
+# Trap to ensure cleanup is called on exit
+trap cleanup EXIT
 
 # Main script execution
 
@@ -153,7 +233,11 @@ fi
 
 install_nginx "$PKG_MANAGER"
 
-deploy_frontend "$FRONTEND_DIR"
+check_downloader
+
+download_and_extract_frontend "$FRONTEND_URL"
+
+deploy_frontend "$FRONTEND_SOURCE_DIR"
 
 configure_nginx
 
