@@ -2,68 +2,31 @@
 set -e
 
 # ==============================
-# Nginx Front-End Deployment Script
+# Minimal Nginx Reverse Proxy Setup for Fedora
 # ==============================
-# This script deploys a front-end application to Nginx.
-# It supports deploying from:
-#   1. A local directory containing front-end files.
-#   2. A URL pointing to an archive (.zip, .tar.gz, .tgz).
-#   3. A URL to a static website.
-#   4. A Git repository URL.
+# This script installs Nginx (if not already installed) and configures it
+# as a reverse proxy to a specified backend URL.
 #
 # Usage:
-#   ./deploy_nginx.sh [path_to_frontend_or_url]
+#   ./deploy_nginx.sh
 #
-# If no argument is provided, it defaults to a predefined URL.
+# The script does NOT deploy any local files;
+# All requests are proxied to PROXY_TARGET.
 # ==============================
 
-DEFAULT_FRONTEND_URL="https://georgrybski.github.io/uninter/portfolio/"  # Update this to your default source
-NGINX_ROOT="/var/www/html"
+PROXY_TARGET="https://georgrybski.github.io/uninter/portfolio/"
 
 usage() {
-    echo "========================================="
-    echo "Nginx Front-End Deployment Script Usage"
-    echo "========================================="
-    echo ""
-    echo "Usage: $0 [path_to_frontend_or_url]"
-    echo ""
-    echo "Arguments:"
-    echo "  path_to_frontend_or_url   Path to a local directory containing front-end files OR"
-    echo "                            URL to an archive (.zip, .tar.gz, .tgz) OR"
-    echo "                            URL to a static website OR"
-    echo "                            Git repository URL (.git)"
-    echo ""
-    echo "If no argument is provided, it defaults to downloading from:"
-    echo "  $DEFAULT_FRONTEND_URL"
-    echo ""
-    echo "Examples:"
-    echo "  Deploy from a local directory:"
-    echo "    $0 /path/to/local/frontend"
-    echo ""
-    echo "  Deploy from a ZIP archive URL:"
-    echo "    $0 https://example.com/frontend.zip"
-    echo ""
-    echo "  Deploy from a static site URL:"
-    echo "    $0 https://example.com/static-site/"
-    echo ""
-    echo "  Deploy from a Git repository:"
-    echo "    $0 https://github.com/user/repo.git"
-    echo ""
+    echo "Usage: $0"
+    echo "Description: Installs and configures Nginx as a reverse proxy to $PROXY_TARGET."
     exit 1
 }
 
-cleanup() {
-    if [[ -n "$TEMP_DIR_PATH" && -d "$TEMP_DIR_PATH" ]]; then
-        sudo rm -rf "$TEMP_DIR_PATH"
-        echo "Cleaned up temporary files."
-    fi
-}
-
-trap cleanup EXIT
-
 detect_package_manager() {
-    if command -v apt-get &> /dev/null; then
+    if command -v apt &> /dev/null; then
         echo "apt"
+    elif command -v apt-get &> /dev/null; then
+        echo "apt-get"
     elif command -v dnf &> /dev/null; then
         echo "dnf"
     elif command -v yum &> /dev/null; then
@@ -76,17 +39,17 @@ detect_package_manager() {
 }
 
 install_nginx() {
-    local pkg_manager=$1
+    local pkg_manager="$1"
 
     echo "Detected package manager: $pkg_manager"
+    echo "Installing Nginx if not already installed..."
 
-    case $pkg_manager in
-        apt)
+    case "$pkg_manager" in
+        apt|apt-get)
             sudo apt-get update -y
             sudo apt-get install -y nginx
             ;;
         dnf)
-            sudo dnf install -y epel-release
             sudo dnf install -y nginx
             ;;
         yum)
@@ -94,7 +57,6 @@ install_nginx() {
             sudo yum install -y nginx
             ;;
         zypper)
-            sudo zypper refresh
             sudo zypper install -y nginx
             ;;
         *)
@@ -102,388 +64,134 @@ install_nginx() {
             exit 1
             ;;
     esac
+
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
 }
 
-check_downloader() {
-    if command -v wget &> /dev/null; then
-        DOWNLOADER="wget"
-    elif command -v curl &> /dev/null; then
-        DOWNLOADER="curl"
-    else
-        echo "Neither wget nor curl is installed. Installing wget..."
-        install_downloader
-    fi
-}
-
-install_downloader() {
-    local pkg_manager=$(detect_package_manager)
-
-    case $pkg_manager in
-        apt)
-            sudo apt-get update -y
-            sudo apt-get install -y wget
-            ;;
-        dnf)
-            sudo dnf install -y wget
-            ;;
-        yum)
-            sudo yum install -y wget
-            ;;
-        zypper)
-            sudo zypper refresh
-            sudo zypper install -y wget
-            ;;
-        *)
-            echo "Unsupported package manager. Please install wget or curl manually."
-            exit 1
-            ;;
-    esac
-
-    if command -v wget &> /dev/null; then
-        DOWNLOADER="wget"
-    elif command -v curl &> /dev/null; then
-        DOWNLOADER="curl"
-    else
-        echo "Failed to install wget or curl. Please install manually."
-        exit 1
-    fi
-}
-
-check_git() {
-    if ! command -v git &> /dev/null; then
-        echo "Git is not installed. Installing Git..."
-        local pkg_manager=$(detect_package_manager)
-        case $pkg_manager in
-            apt)
-                sudo apt-get update -y
-                sudo apt-get install -y git
-                ;;
-            dnf)
-                sudo dnf install -y git
-                ;;
-            yum)
-                sudo yum install -y git
-                ;;
-            zypper)
-                sudo zypper refresh
-                sudo zypper install -y git
-                ;;
-            *)
-                echo "Unsupported package manager. Please install Git manually."
-                exit 1
-                ;;
-        esac
-
-        if ! command -v git &> /dev/null; then
-            echo "Failed to install Git. Please install manually."
-            exit 1
-        fi
-    fi
-}
-
-install_unzip() {
-    if ! command -v unzip &> /dev/null; then
-        echo "unzip is not installed. Installing unzip..."
-        local pkg_manager=$(detect_package_manager)
-        case $pkg_manager in
-            apt)
-                sudo apt-get update -y
-                sudo apt-get install -y unzip
-                ;;
-            dnf)
-                sudo dnf install -y unzip
-                ;;
-            yum)
-                sudo yum install -y unzip
-                ;;
-            zypper)
-                sudo zypper refresh
-                sudo zypper install -y unzip
-                ;;
-            *)
-                echo "Unsupported package manager. Please install unzip manually."
-                exit 1
-                ;;
-        esac
-
-        if ! command -v unzip &> /dev/null; then
-            echo "Failed to install unzip. Please install manually."
-            exit 1
-        fi
-    fi
-}
-
-is_url() {
-    if [[ "$1" =~ ^https?:// ]]; then
-        return 0
-    else
-        return 1
-    fi
-}
-
-is_git_repo() {
-    if [[ "$1" =~ \.git$ ]]; then
-        return 0
-    else
-        return 1
-    fi
-}
-
-download_and_extract_frontend() {
-    local url=$1
-    local temp_dir
-    temp_dir=$(mktemp -d)
-    local archive_name="$temp_dir/frontend_archive"
-
-    echo "Downloading front-end archive from $url..."
-
-    if [[ "$DOWNLOADER" == "curl" ]]; then
-        curl -L "$url" -o "$archive_name"
-    else
-        wget "$url" -O "$archive_name"
-    fi
-
-    echo "Download complete. Extracting archive..."
-
-    # Determine archive type and extract accordingly
-    if [[ "$archive_name" == *.zip ]]; then
-        install_unzip
-        unzip "$archive_name" -d "$temp_dir/extracted"
-    elif [[ "$archive_name" == *.tar.gz || "$archive_name" == *.tgz ]]; then
-        tar -xzf "$archive_name" -C "$temp_dir/extracted"
-    else
-        echo "Unsupported archive format. Please provide a .zip or .tar.gz archive."
-        exit 1
-    fi
-
-    # Assuming the archive contains a single directory; adjust as needed
-    FRONTEND_SOURCE_DIR=$(find "$temp_dir/extracted" -mindepth 1 -maxdepth 1 -type d | head -n 1)
-
-    if [[ -z "$FRONTEND_SOURCE_DIR" ]]; then
-        echo "Failed to locate extracted front-end directory."
-        exit 1
-    fi
-
-    echo "Front-end extracted to $FRONTEND_SOURCE_DIR"
-
-    # Export the temp directory path for cleanup
-    TEMP_DIR_PATH="$temp_dir"
-}
-
-download_static_site() {
-    local url=$1
-    local temp_dir
-    temp_dir=$(mktemp -d)
-    local extracted_dir="$temp_dir/extracted"
-
-    # Create the extracted directory
-    mkdir -p "$extracted_dir"
-
-    echo "Downloading static site from $url recursively into $extracted_dir..."
-
-    if [[ "$DOWNLOADER" == "wget" ]]; then
-        # Enhanced wget command with additional flags
-        wget --recursive \
-             --no-clobber \
-             --page-requisites \
-             --html-extension \
-             --convert-links \
-             --no-parent \
-             --domains "$(echo "$url" | awk -F/ '{print $3}')" \
-             --restrict-file-names=windows \
-             --level=5 \
-             --directory-prefix="$extracted_dir" \
-             --verbose \
-             --max-redirect=10 \
-             "$url"
-    elif [[ "$DOWNLOADER" == "curl" ]]; then
-        echo "Recursive download with curl is not straightforward. Please use wget or provide an archive."
-        exit 1
-    fi
-
-    # Verify that files were downloaded
-    if [[ ! -d "$extracted_dir" || -z "$(ls -A "$extracted_dir")" ]]; then
-        echo "Failed to download the static site. Please check the URL and try again."
-        exit 1
-    fi
-
-    FRONTEND_SOURCE_DIR="$extracted_dir"
-
-    echo "Static site downloaded to $FRONTEND_SOURCE_DIR"
-
-    # Export the temp directory path for cleanup
-    TEMP_DIR_PATH="$temp_dir"
-}
-
-clone_repository() {
-    local repo_url=$1
-    local temp_dir
-    temp_dir=$(mktemp -d)
-    local extracted_dir="$temp_dir/extracted"
-
-    echo "Cloning Git repository from $repo_url into $extracted_dir..."
-
-    git clone "$repo_url" "$extracted_dir"
-
-    if [[ $? -ne 0 ]]; then
-        echo "Failed to clone the repository. Please check the repository URL."
-        exit 1
-    fi
-
-    FRONTEND_SOURCE_DIR="$extracted_dir"
-    TEMP_DIR_PATH="$temp_dir"
-
-    echo "Repository cloned to $FRONTEND_SOURCE_DIR"
-}
-
-deploy_frontend() {
-    local frontend_source=$1
-    local nginx_root=$2
-
-    echo "Deploying front-end from '$frontend_source' to '$nginx_root'..."
-
-    # Remove existing content in nginx root
-    sudo rm -rf "$nginx_root"/*
-
-    # Copy front-end files to nginx root
-    sudo cp -r "$frontend_source"/* "$nginx_root"
-
-    # Set proper permissions
-    sudo chown -R www-data:www-data "$nginx_root"
-    sudo chmod -R 755 "$nginx_root"
-
-    echo "Front-end deployed successfully."
-}
 
 configure_nginx() {
-    local nginx_conf="/etc/nginx/sites-available/default"
+    local nginx_conf="/etc/nginx/conf.d/reverse-proxy.conf"
 
-    echo "Configuring Nginx to serve the front-end..."
+    # Ensure PROXY_TARGET is set
+    if [[ -z "$PROXY_TARGET" ]]; then
+        echo "Error: PROXY_TARGET is not set."
+        exit 1
+    fi
 
-    sudo bash -c "cat > $nginx_conf <<EOF
+    echo "Configuring Nginx as a reverse proxy to $PROXY_TARGET..."
+
+    # Backup existing configuration if it exists
+    if [[ -f "$nginx_conf" ]]; then
+        sudo cp "$nginx_conf" "${nginx_conf}.bak.$(date +%s)"
+        echo "Existing Nginx configuration backed up."
+    fi
+
+    # Write the new Nginx configuration using sudo tee with a quoted heredoc
+    sudo tee "$nginx_conf" > /dev/null <<'EOF'
 server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
+    listen 80;
+    listen [::]:80;
 
-    root $NGINX_ROOT;
-    index index.html index.htm;
-
-    server_name _;
+    server_name localhost;
 
     location / {
-        try_files \$uri \$uri/ =404;
-    }
+        proxy_pass https://georgrybski.github.io/uninter/portfolio/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
 
-    # Optional: Enable gzip compression for better performance
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+        # Enable SSL verification
+        proxy_ssl_verify on;
+        proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
+        proxy_ssl_verify_depth 2;
+    }
 }
-EOF"
+EOF
+
+    # Replace the placeholder with the actual PROXY_TARGET
+    sudo sed -i "s|PROXY_TARGET_PLACEHOLDER|$PROXY_TARGET|" "$nginx_conf"
+
+    if [[ ! -f "$nginx_conf" ]]; then
+        echo "Error: Failed to create Nginx configuration file at $nginx_conf."
+        exit 1
+    fi
 
     echo "Testing Nginx configuration..."
     sudo nginx -t
 
-    echo "Restarting Nginx to apply changes..."
-    sudo systemctl restart nginx
+    if [[ $? -ne 0 ]]; then
+        echo "Error: Nginx configuration test failed. Please check the configuration."
+        exit 1
+    fi
 
-    echo "Nginx configured successfully."
+    echo "Reloading Nginx..."
+    sudo systemctl reload nginx
+
+    echo "Nginx reverse proxy configured successfully."
 }
+
+
 
 validate_setup() {
-    echo "Validating Nginx setup by accessing http://localhost..."
-
+    echo "Validating Nginx setup at http://localhost ..."
     sleep 2
 
-    # Determine the validation tool
+    local http_status
+
     if command -v curl &> /dev/null; then
-        # Follow redirects and capture the final HTTP status code
-        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L http://localhost)
+        http_status=$(curl -s -o /dev/null -w "%{http_code}" -L http://localhost)
     elif command -v wget &> /dev/null; then
-        HTTP_STATUS=$(wget --spider -S http://localhost 2>&1 | grep "HTTP/" | awk '{print $2}' | head -n1)
+        http_status=$(wget --spider -S http://localhost 2>&1 | grep 'HTTP/' | awk '{print $2}' | head -n1)
     else
-        echo "Neither curl nor wget is available for validation."
-        exit 1
+        echo "Neither curl nor wget is installed. Cannot validate automatically."
+        return
     fi
 
-    if [[ "$HTTP_STATUS" == "200" ]]; then
-        echo "Validation successful: Nginx is serving content correctly at http://localhost"
-    elif [[ "$HTTP_STATUS" == "301" || "$HTTP_STATUS" == "302" ]]; then
-        echo "Received a redirect status code ($HTTP_STATUS). This might be expected if Nginx is configured to redirect HTTP to HTTPS."
-        echo "Please verify the final destination URL and ensure it serves content correctly."
+    if [[ "$http_status" == "200" ]]; then
+        echo "Success! Received HTTP 200 from $PROXY_TARGET via http://localhost"
+    elif [[ "$http_status" =~ ^30[12]$ ]]; then
+        echo "Received redirect (HTTP $http_status). If your proxy target redirects HTTP to HTTPS, this is normal."
     else
-        echo "Validation failed: Received HTTP status code $HTTP_STATUS"
-        exit 1
+        echo "Validation failed: Received HTTP status code $http_status"
     fi
 }
 
+####################
+# Main Logic
+####################
+
 main() {
+    # If help requested
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then
         usage
     fi
 
-    FRONTEND_SOURCE=${1:-"$DEFAULT_FRONTEND_URL"}
-
     echo "========================================="
-    echo "Starting Nginx Front-End Deployment Script"
+    echo " Nginx Reverse Proxy: $PROXY_TARGET"
     echo "========================================="
     echo ""
 
-    PKG_MANAGER=$(detect_package_manager)
+    local pkg_manager
+    pkg_manager="$(detect_package_manager)"
 
-    if [[ "$PKG_MANAGER" == "unsupported" ]]; then
+    if [[ "$pkg_manager" == "unsupported" ]]; then
         echo "Error: Unsupported package manager."
         exit 1
     fi
 
-    install_nginx "$PKG_MANAGER"
-
-    check_downloader
-
-    if is_url "$FRONTEND_SOURCE"; then
-        if is_git_repo "$FRONTEND_SOURCE"; then
-            check_git
-            clone_repository "$FRONTEND_SOURCE"
-        elif [[ "$FRONTEND_SOURCE" =~ \.zip$ || "$FRONTEND_SOURCE" =~ \.tar\.gz$ || "$FRONTEND_SOURCE" =~ \.tgz$ ]]; then
-            # It's an archive
-            download_and_extract_frontend "$FRONTEND_SOURCE"
-        else
-            # Assume it's a static site and download recursively
-            # Ensure the URL ends with a slash for wget to handle properly
-            if [[ "$FRONTEND_SOURCE" != */ ]]; then
-                FRONTEND_SOURCE="$FRONTEND_SOURCE/"
-            fi
-            download_static_site "$FRONTEND_SOURCE"
-        fi
-    else
-        # Assume it's a local directory
-        FRONTEND_SOURCE_DIR="$FRONTEND_SOURCE"
-
-        # Check if the front-end directory exists
-        if [[ ! -d "$FRONTEND_SOURCE_DIR" ]]; then
-            echo "Front-end directory '$FRONTEND_SOURCE_DIR' does not exist."
-            echo "Please provide a valid front-end directory or a valid URL."
-            exit 1
-        fi
-
-        # Check if the front-end directory is not empty
-        if [[ -z "$(ls -A "$FRONTEND_SOURCE_DIR")" ]]; then
-            echo "Front-end directory '$FRONTEND_SOURCE_DIR' is empty."
-            echo "Please provide a directory with your front-end files or a valid URL."
-            exit 1
-        fi
-    fi
-
-    deploy_frontend "$FRONTEND_SOURCE_DIR" "$NGINX_ROOT"
-
+    install_nginx "$pkg_manager"
     configure_nginx
-
     validate_setup
 
     echo ""
     echo "========================================="
-    echo "Nginx Front-End Deployment Completed Successfully!"
+    echo " Reverse Proxy Setup Complete!"
     echo "========================================="
 }
 
-# Execute the main function with all script arguments
 main "$@"
