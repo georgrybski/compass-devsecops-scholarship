@@ -2,9 +2,9 @@
 set -e
 
 usage() {
-    echo "Usage: $0 [url_to_frontend_archive]"
-    echo "If no URL is provided, it defaults to downloading a predefined front-end archive."
-    echo "Ensure the URL points to a valid front-end archive (e.g., .zip or .tar.gz)."
+    echo "Usage: $0 [path_to_frontend_or_url]"
+    echo "If no argument is provided, it defaults to downloading a predefined front-end archive."
+    echo "Provide either a local directory path containing your front-end files or a URL to download them."
     exit 1
 }
 
@@ -12,7 +12,8 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     usage
 fi
 
-FRONTEND_URL=${1:-"https://example.com/path/to/default/frontend.zip"}
+# Get the front-end source from the first argument, default to a predefined URL
+FRONTEND_SOURCE=${1:-"https://georgrybski.github.io/uninter/portfolio/index.html"}
 
 detect_package_manager() {
     if command -v apt-get &> /dev/null; then
@@ -63,7 +64,7 @@ check_downloader() {
     elif command -v wget &> /dev/null; then
         DOWNLOADER="wget"
     else
-        echo "Neither curl nor wget is installed. Installing curl..."
+        echo "Neither curl nor wget is installed. Installing wget..."
         install_downloader
     fi
 }
@@ -74,17 +75,17 @@ install_downloader() {
     case $pkg_manager in
         apt)
             sudo apt-get update -y
-            sudo apt-get install -y curl
+            sudo apt-get install -y wget
             ;;
         dnf)
-            sudo dnf install -y curl
+            sudo dnf install -y wget
             ;;
         yum)
-            sudo yum install -y curl
+            sudo yum install -y wget
             ;;
         zypper)
             sudo zypper refresh
-            sudo zypper install -y curl
+            sudo zypper install -y wget
             ;;
         *)
             echo "Unsupported package manager. Please install curl or wget manually."
@@ -92,13 +93,21 @@ install_downloader() {
             ;;
     esac
 
-    if command -v curl &> /dev/null; then
-        DOWNLOADER="curl"
-    elif command -v wget &> /dev/null; then
+    if command -v wget &> /dev/null; then
         DOWNLOADER="wget"
+    elif command -v curl &> /dev/null; then
+        DOWNLOADER="curl"
     else
         echo "Failed to install curl or wget. Please install manually."
         exit 1
+    fi
+}
+
+is_url() {
+    if [[ "$1" =~ ^https?:// ]]; then
+        return 0
+    else
+        return 1
     fi
 }
 
@@ -118,9 +127,8 @@ download_and_extract_frontend() {
 
     echo "Download complete. Extracting archive..."
 
-    # Determine archive type and extract accordingly
     if [[ "$archive_name" == *.zip ]]; then
-        sudo apt-get install -y unzip || sudo yum install -y unzip || sudo dnf install -y unzip || sudo zypper install -y unzip
+        install_unzip
         unzip "$archive_name" -d "$temp_dir/extracted"
     elif [[ "$archive_name" == *.tar.gz || "$archive_name" == *.tgz ]]; then
         tar -xzf "$archive_name" -C "$temp_dir/extracted"
@@ -137,6 +145,51 @@ download_and_extract_frontend() {
     fi
 
     echo "Front-end extracted to $FRONTEND_SOURCE_DIR"
+
+    TEMP_DIR_PATH="$temp_dir"
+}
+
+install_unzip() {
+    if ! command -v unzip &> /dev/null; then
+        echo "unzip not found. Installing unzip..."
+        local pkg_manager=$(detect_package_manager)
+        case $pkg_manager in
+            apt)
+                sudo apt-get install -y unzip
+                ;;
+            dnf)
+                sudo dnf install -y unzip
+                ;;
+            yum)
+                sudo yum install -y unzip
+                ;;
+            zypper)
+                sudo zypper install -y unzip
+                ;;
+            *)
+                echo "Unsupported package manager. Please install unzip manually."
+                exit 1
+                ;;
+        esac
+    fi
+}
+
+download_static_site() {
+    local url=$1
+    local temp_dir
+    temp_dir=$(mktemp -d)
+    echo "Downloading static site from $url recursively into $temp_dir..."
+
+    if [[ "$DOWNLOADER" == "wget" ]]; then
+        wget --recursive --no-clobber --page-requisites --html-extension --convert-links --no-parent "$url" -P "$temp_dir/extracted"
+    elif [[ "$DOWNLOADER" == "curl" ]]; then
+        echo "Recursive download with curl is not straightforward. Please use wget or provide an archive."
+        exit 1
+    fi
+
+    FRONTEND_SOURCE_DIR="$temp_dir/extracted"
+
+    echo "Static site downloaded to $FRONTEND_SOURCE_DIR"
 
     # Export the temp directory path for cleanup
     TEMP_DIR_PATH="$temp_dir"
@@ -217,7 +270,6 @@ cleanup() {
     fi
 }
 
-# Trap to ensure cleanup is called on exit
 trap cleanup EXIT
 
 # Main script execution
@@ -235,12 +287,38 @@ install_nginx "$PKG_MANAGER"
 
 check_downloader
 
-download_and_extract_frontend "$FRONTEND_URL"
+if is_url "$FRONTEND_SOURCE"; then
+    # Determine if the URL points to an archive based on its extension
+    if [[ "$FRONTEND_SOURCE" =~ \.zip$ || "$FRONTEND_SOURCE" =~ \.tar\.gz$ || "$FRONTEND_SOURCE" =~ \.tgz$ ]]; then
+        download_and_extract_frontend "$FRONTEND_SOURCE"
+    else
+        # Assume it's a static site and download recursively
+        download_static_site "$FRONTEND_SOURCE"
+    fi
+else
+    # Assume it's a local directory
+    FRONTEND_SOURCE_DIR="$FRONTEND_SOURCE"
+
+    # Check if the front-end directory exists
+    if [[ ! -d "$FRONTEND_SOURCE_DIR" ]]; then
+        echo "Front-end directory '$FRONTEND_SOURCE_DIR' does not exist."
+        echo "Please provide a valid front-end directory or a valid URL."
+        exit 1
+    fi
+
+    # Check if the front-end directory is not empty
+    if [[ -z "$(ls -A "$FRONTEND_SOURCE_DIR")" ]]; then
+        echo "Front-end directory '$FRONTEND_SOURCE_DIR' is empty."
+        echo "Please provide a directory with your front-end files or a valid URL."
+        exit 1
+    fi
+fi
 
 deploy_frontend "$FRONTEND_SOURCE_DIR"
 
 configure_nginx
 
+# Validate the setup
 validate_setup
 
 echo "Nginx deployment completed successfully."
