@@ -69,7 +69,6 @@ install_nginx() {
     sudo systemctl start nginx
 }
 
-
 configure_nginx() {
     local nginx_conf="/etc/nginx/conf.d/reverse-proxy.conf"
 
@@ -93,23 +92,7 @@ server {
     listen 80;
     listen [::]:80;
 
-    server_name localhost;
-
-    location / {
-        proxy_pass https://georgrybski.github.io/uninter/portfolio/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Enable SSL verification
-        proxy_ssl_verify on;
-        proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
-        proxy_ssl_verify_depth 2;
-    }
+    return 301 https://georgrybski.github.io/uninter/portfolio$request_uri;
 }
 EOF
 
