@@ -2,10 +2,10 @@
 set -e
 
 # ==============================
-# Minimal Nginx Reverse Proxy Setup for Fedora
+# Minimal Nginx Setup for Fedora
 # ==============================
 # This script installs Nginx (if not already installed) and configures it
-# as a reverse proxy to a specified backend URL.
+# pointing to a specified backend URL.
 #
 # Usage:
 #   ./deploy_nginx.sh
@@ -14,11 +14,11 @@ set -e
 # All requests are proxied to PROXY_TARGET.
 # ==============================
 
-PROXY_TARGET="https://georgrybski.github.io/uninter/portfolio/"
+PROXY_TARGET="https://georgrybski.github.io/uninter/portfolio"
 
 usage() {
     echo "Usage: $0"
-    echo "Description: Installs and configures Nginx as a reverse proxy to $PROXY_TARGET."
+    echo "Description: Installs and configures Nginx pointing to $PROXY_TARGET."
     exit 1
 }
 
@@ -78,7 +78,7 @@ configure_nginx() {
         exit 1
     fi
 
-    echo "Configuring Nginx as a reverse proxy to $PROXY_TARGET..."
+    echo "Configuring Nginx pointing to $PROXY_TARGET..."
 
     # Backup existing configuration if it exists
     if [[ -f "$nginx_conf" ]]; then
@@ -91,8 +91,7 @@ configure_nginx() {
 server {
     listen 80;
     listen [::]:80;
-
-    return 301 https://georgrybski.github.io/uninter/portfolio$request_uri;
+    return 301 PROXY_TARGET_PLACEHOLDER$request_uri;
 }
 EOF
 
@@ -115,7 +114,7 @@ EOF
     echo "Reloading Nginx..."
     sudo systemctl reload nginx
 
-    echo "Nginx reverse proxy configured successfully."
+    echo "Nginx configured successfully."
 }
 
 
@@ -144,10 +143,6 @@ validate_setup() {
     fi
 }
 
-####################
-# Main Logic
-####################
-
 main() {
     # If help requested
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then
@@ -155,7 +150,7 @@ main() {
     fi
 
     echo "========================================="
-    echo " Nginx Reverse Proxy: $PROXY_TARGET"
+    echo " Nginx Pointing To: $PROXY_TARGET"
     echo "========================================="
     echo ""
 
@@ -173,7 +168,7 @@ main() {
 
     echo ""
     echo "========================================="
-    echo " Reverse Proxy Setup Complete!"
+    echo " Nginx Setup Complete!"
     echo "========================================="
 }
 
