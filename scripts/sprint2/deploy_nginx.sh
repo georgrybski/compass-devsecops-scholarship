@@ -17,15 +17,9 @@ set -e
 # If no argument is provided, it defaults to a predefined URL.
 # ==============================
 
-# ------------------------------
-# Configuration Variables
-# ------------------------------
 DEFAULT_FRONTEND_URL="https://georgrybski.github.io/uninter/portfolio/"  # Update this to your default source
 NGINX_ROOT="/var/www/html"
 
-# ------------------------------
-# Usage Instructions
-# ------------------------------
 usage() {
     echo "========================================="
     echo "Nginx Front-End Deployment Script Usage"
@@ -58,9 +52,6 @@ usage() {
     exit 1
 }
 
-# ------------------------------
-# Cleanup Function
-# ------------------------------
 cleanup() {
     if [[ -n "$TEMP_DIR_PATH" && -d "$TEMP_DIR_PATH" ]]; then
         sudo rm -rf "$TEMP_DIR_PATH"
@@ -68,12 +59,8 @@ cleanup() {
     fi
 }
 
-# Ensure cleanup is called on script exit
 trap cleanup EXIT
 
-# ------------------------------
-# Detect Package Manager
-# ------------------------------
 detect_package_manager() {
     if command -v apt-get &> /dev/null; then
         echo "apt"
@@ -88,9 +75,6 @@ detect_package_manager() {
     fi
 }
 
-# ------------------------------
-# Install Nginx
-# ------------------------------
 install_nginx() {
     local pkg_manager=$1
 
@@ -120,9 +104,6 @@ install_nginx() {
     esac
 }
 
-# ------------------------------
-# Check and Install Downloader (wget or curl)
-# ------------------------------
 check_downloader() {
     if command -v wget &> /dev/null; then
         DOWNLOADER="wget"
@@ -134,9 +115,6 @@ check_downloader() {
     fi
 }
 
-# ------------------------------
-# Install Downloader (prefers wget)
-# ------------------------------
 install_downloader() {
     local pkg_manager=$(detect_package_manager)
 
@@ -171,9 +149,6 @@ install_downloader() {
     fi
 }
 
-# ------------------------------
-# Check and Install Git
-# ------------------------------
 check_git() {
     if ! command -v git &> /dev/null; then
         echo "Git is not installed. Installing Git..."
@@ -206,9 +181,6 @@ check_git() {
     fi
 }
 
-# ------------------------------
-# Check and Install Unzip
-# ------------------------------
 install_unzip() {
     if ! command -v unzip &> /dev/null; then
         echo "unzip is not installed. Installing unzip..."
@@ -241,11 +213,7 @@ install_unzip() {
     fi
 }
 
-# ------------------------------
-# Determine if Input is a URL
-# ------------------------------
 is_url() {
-    # Simple regex to check if the input starts with http:// or https://
     if [[ "$1" =~ ^https?:// ]]; then
         return 0
     else
@@ -253,9 +221,6 @@ is_url() {
     fi
 }
 
-# ------------------------------
-# Determine if Input is a Git Repository
-# ------------------------------
 is_git_repo() {
     if [[ "$1" =~ \.git$ ]]; then
         return 0
@@ -264,9 +229,6 @@ is_git_repo() {
     fi
 }
 
-# ------------------------------
-# Download and Extract Archive
-# ------------------------------
 download_and_extract_frontend() {
     local url=$1
     local temp_dir
@@ -308,9 +270,6 @@ download_and_extract_frontend() {
     TEMP_DIR_PATH="$temp_dir"
 }
 
-# ------------------------------
-# Download Static Site Recursively
-# ------------------------------
 download_static_site() {
     local url=$1
     local temp_dir
@@ -335,6 +294,7 @@ download_static_site() {
              --level=5 \
              --directory-prefix="$extracted_dir" \
              --verbose \
+             --max-redirect=10 \
              "$url"
     elif [[ "$DOWNLOADER" == "curl" ]]; then
         echo "Recursive download with curl is not straightforward. Please use wget or provide an archive."
@@ -355,9 +315,6 @@ download_static_site() {
     TEMP_DIR_PATH="$temp_dir"
 }
 
-# ------------------------------
-# Clone Git Repository
-# ------------------------------
 clone_repository() {
     local repo_url=$1
     local temp_dir
@@ -379,9 +336,6 @@ clone_repository() {
     echo "Repository cloned to $FRONTEND_SOURCE_DIR"
 }
 
-# ------------------------------
-# Deploy Front-End to Nginx
-# ------------------------------
 deploy_frontend() {
     local frontend_source=$1
     local nginx_root=$2
@@ -401,9 +355,6 @@ deploy_frontend() {
     echo "Front-end deployed successfully."
 }
 
-# ------------------------------
-# Configure Nginx to Serve Front-End
-# ------------------------------
 configure_nginx() {
     local nginx_conf="/etc/nginx/sites-available/default"
 
@@ -438,9 +389,6 @@ EOF"
     echo "Nginx configured successfully."
 }
 
-# ------------------------------
-# Validate Nginx Deployment
-# ------------------------------
 validate_setup() {
     echo "Validating Nginx setup by accessing http://localhost..."
 
@@ -448,7 +396,8 @@ validate_setup() {
 
     # Determine the validation tool
     if command -v curl &> /dev/null; then
-        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost)
+        # Follow redirects and capture the final HTTP status code
+        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L http://localhost)
     elif command -v wget &> /dev/null; then
         HTTP_STATUS=$(wget --spider -S http://localhost 2>&1 | grep "HTTP/" | awk '{print $2}' | head -n1)
     else
@@ -458,22 +407,20 @@ validate_setup() {
 
     if [[ "$HTTP_STATUS" == "200" ]]; then
         echo "Validation successful: Nginx is serving content correctly at http://localhost"
+    elif [[ "$HTTP_STATUS" == "301" || "$HTTP_STATUS" == "302" ]]; then
+        echo "Received a redirect status code ($HTTP_STATUS). This might be expected if Nginx is configured to redirect HTTP to HTTPS."
+        echo "Please verify the final destination URL and ensure it serves content correctly."
     else
         echo "Validation failed: Received HTTP status code $HTTP_STATUS"
         exit 1
     fi
 }
 
-# ------------------------------
-# Main Script Execution
-# ------------------------------
 main() {
-    # Display usage if help flag is used
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then
         usage
     fi
 
-    # Get the front-end source from the first argument, default to DEFAULT_FRONTEND_URL
     FRONTEND_SOURCE=${1:-"$DEFAULT_FRONTEND_URL"}
 
     echo "========================================="
@@ -481,7 +428,6 @@ main() {
     echo "========================================="
     echo ""
 
-    # Detect Package Manager
     PKG_MANAGER=$(detect_package_manager)
 
     if [[ "$PKG_MANAGER" == "unsupported" ]]; then
@@ -489,16 +435,12 @@ main() {
         exit 1
     fi
 
-    # Install Nginx
     install_nginx "$PKG_MANAGER"
 
-    # Check for downloader and install if necessary
     check_downloader
 
-    # Determine if the FRONTEND_SOURCE is a URL or a local directory
     if is_url "$FRONTEND_SOURCE"; then
         if is_git_repo "$FRONTEND_SOURCE"; then
-            # It's a Git repository
             check_git
             clone_repository "$FRONTEND_SOURCE"
         elif [[ "$FRONTEND_SOURCE" =~ \.zip$ || "$FRONTEND_SOURCE" =~ \.tar\.gz$ || "$FRONTEND_SOURCE" =~ \.tgz$ ]]; then
@@ -531,13 +473,10 @@ main() {
         fi
     fi
 
-    # Deploy the front-end to Nginx
     deploy_frontend "$FRONTEND_SOURCE_DIR" "$NGINX_ROOT"
 
-    # Configure Nginx to serve the front-end
     configure_nginx
 
-    # Validate the setup
     validate_setup
 
     echo ""
