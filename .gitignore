@@ -1,0 +1,57 @@
+# IDEs and Editors
+.idea/
+.vscode/
+*.iml
+*.iws
+.metadata/
+*.classpath
+*.project
+*.settings/
+nbproject/private/
+.history/
+*.sublime-workspace
+*.sublime-project
+*.atom/
+.atom-build/
+.buildfile
+.ide-haskell-hie/
+
+# Build and Output Files
+out/
+target/
+build/
+nbbuild/
+dist/
+nbdist/
+
+# Temporary Files
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.stackdump
+
+# Lock Files
+package-lock.json
+yarn.lock
+
+# Tags
+tags
+ctags
+
+# Vim
+.vimrc
+.vim/
+vim.swap
