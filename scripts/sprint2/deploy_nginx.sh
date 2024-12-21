@@ -2,7 +2,7 @@
 set -e
 
 # ==============================
-# Minimal Nginx Setup for Fedora
+# Minimal Nginx Setup
 # ==============================
 # This script installs Nginx (if not already installed) and configures it
 # pointing to a specified backend URL.
@@ -70,9 +70,16 @@ install_nginx() {
 }
 
 configure_nginx() {
-    local nginx_conf="/etc/nginx/conf.d/reverse-proxy.conf"
+    local pkg_manager="$1"
+    local nginx_conf
 
-    # Ensure PROXY_TARGET is set
+    if [[ "$pkg_manager" == "apt" || "$pkg_manager" == "apt-get" ]]; then
+        nginx_conf="/etc/nginx/sites-available/reverse-proxy.conf"
+        nginx_enabled="/etc/nginx/sites-enabled/reverse-proxy.conf"
+    else
+        nginx_conf="/etc/nginx/conf.d/reverse-proxy.conf"
+    fi
+
     if [[ -z "$PROXY_TARGET" ]]; then
         echo "Error: PROXY_TARGET is not set."
         exit 1
@@ -98,6 +105,11 @@ EOF
     # Replace the placeholder with the actual PROXY_TARGET
     sudo sed -i "s|PROXY_TARGET_PLACEHOLDER|$PROXY_TARGET|" "$nginx_conf"
 
+    # For Debian-based systems, enable the site by creating a symlink
+    if [[ "$pkg_manager" == "apt" || "$pkg_manager" == "apt-get" ]]; then
+        sudo ln -sf "$nginx_conf" "$nginx_enabled"
+    fi
+
     if [[ ! -f "$nginx_conf" ]]; then
         echo "Error: Failed to create Nginx configuration file at $nginx_conf."
         exit 1
@@ -116,8 +128,6 @@ EOF
 
     echo "Nginx configured successfully."
 }
-
-
 
 validate_setup() {
     echo "Validating Nginx setup at http://localhost ..."
@@ -144,7 +154,6 @@ validate_setup() {
 }
 
 main() {
-    # If help requested
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then
         usage
     fi
@@ -163,7 +172,7 @@ main() {
     fi
 
     install_nginx "$pkg_manager"
-    configure_nginx
+    configure_nginx "$pkg_manager"
     validate_setup
 
     echo ""
