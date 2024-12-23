@@ -56,6 +56,7 @@ server {
 }
 EOF
 
+    sudo rm /etc/nginx/sites-enabled/default
     sudo nginx -t
     sudo systemctl reload nginx
     echo "Nginx configuration validated, updated and reloaded."
