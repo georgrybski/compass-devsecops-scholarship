@@ -2,35 +2,34 @@
 set -e
 
 # ==============================
-# Minimal Nginx Redirect Setup
+# Nginx Redirect Setup
 # ==============================
-# This script installs Nginx (if needed) and configures it to
-# issue a 301 redirect to PROXY_TARGET.
-#
-# For example, hitting http://your_server/anything
-# will redirect to https://my-target/anything
-# ==============================
+# Installs Nginx and configures a redirect for "/portfolio" to PROXY_TARGET.
+# Supports apt and dnf package managers.
 
 PROXY_TARGET="https://georgrybski.github.io/uninter/portfolio"
 
+usage() {
+    echo "Usage: $0"
+    echo
+    echo "Sets up Nginx to redirect '/portfolio' to:"
+    echo "  $PROXY_TARGET"
+    echo
+    echo "Options:"
+    echo "  -h, --help    Show this help message"
+    exit 1
+}
+
 detect_package_manager() {
-    if command -v apt &>/dev/null; then
-        echo "apt"
-    elif command -v dnf &>/dev/null; then
-        echo "dnf"
-    elif command -v yum &>/dev/null; then
-        echo "yum"
-    elif command -v zypper &>/dev/null; then
-        echo "zypper"
-    else
-        echo "unsupported"
-    fi
+    for pm in apt dnf; do
+        command -v "$pm" &>/dev/null && echo "$pm" && return
+    done
+    echo "unsupported"
 }
 
 install_nginx() {
     local pkg_manager="$1"
-
-    echo "Installing Nginx if not already present..."
+    echo "Using package manager: $pkg_manager"
 
     case "$pkg_manager" in
         apt)
@@ -39,17 +38,6 @@ install_nginx() {
             ;;
         dnf)
             sudo dnf install -y nginx
-            ;;
-        yum)
-            sudo yum install -y epel-release
-            sudo yum install -y nginx
-            ;;
-        zypper)
-            sudo zypper install -y nginx
-            ;;
-        *)
-            echo "Error: Unsupported package manager."
-            exit 1
             ;;
     esac
 
@@ -60,28 +48,24 @@ install_nginx() {
 configure_nginx() {
     local nginx_conf="/etc/nginx/conf.d/redirect.conf"
 
-    echo "Configuring Nginx to redirect all traffic to:"
-    echo "  $PROXY_TARGET"
-
-    # Overwrite or create a simple config that issues a 301 redirect
     sudo tee "$nginx_conf" >/dev/null <<EOF
 server {
-    listen 80;
-    listen [::]:80;
-
-    return 301 ${PROXY_TARGET}\$request_uri;
+    location /portfolio {
+        return 301 ${PROXY_TARGET};
+    }
 }
 EOF
 
-    # Validate config and reload
     sudo nginx -t
     sudo systemctl reload nginx
-    echo "Nginx configuration updated and reloaded."
+    echo "Nginx configuration validated, updated and reloaded."
 }
 
 main() {
+    [[ "$1" =~ ^-h|--help$ ]] && usage
+
     local pkg_manager
-    pkg_manager="$(detect_package_manager)"
+    pkg_manager=$(detect_package_manager)
 
     if [[ "$pkg_manager" == "unsupported" ]]; then
         echo "Error: Unsupported package manager."
@@ -90,7 +74,8 @@ main() {
 
     install_nginx "$pkg_manager"
     configure_nginx
-    echo "Setup complete!"
+
+    echo "Nginx redirect setup complete."
 }
 
 main "$@"
