@@ -31,6 +31,15 @@ usage() {
   exit 1
 }
 
+check_sudo() {
+  if sudo -n true 2>/dev/null; then
+    :
+  else
+    info "Sudo privileges are required to run this script."
+    sudo -v || { error "Failed to obtain sudo privileges."; exit 1; }
+  fi
+}
+
 parse_arguments() {
   VERBOSE=false
 
@@ -148,6 +157,8 @@ EOF
 
 main() {
   parse_arguments "$@"
+
+  check_sudo
 
   local pkg_manager
   pkg_manager=$(detect_package_manager)
