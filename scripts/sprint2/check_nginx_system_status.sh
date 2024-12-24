@@ -50,7 +50,68 @@ parse_arguments() {
 
 parse_arguments "$@"
 
-get_aws_instance_metadata() {
+detect_package_manager() {
+  for pm in apt dnf; do
+    if command -v "$pm" &>/dev/null; then
+      echo "$pm"
+      return
+    fi
+  done
+  echo "unsupported"
+}
+
+install_package() {
+  local package="$1"
+  local pm
+  pm=$(detect_package_manager)
+
+  case "$pm" in
+    apt)
+      install_package_apt "$package"
+      ;;
+    dnf)
+      install_package_dnf "$package"
+      ;;
+    unsupported)
+      error "Unsupported package manager. Cannot install $package."
+      exit 1
+      ;;
+  esac
+}
+
+install_package_apt() {
+  local package="$1"
+  if [[ "$VERBOSE" == true ]]; then
+    sudo apt-get update -y
+    sudo apt-get install -y "$package"
+  else
+    sudo apt-get update -y &>/dev/null
+    sudo apt-get install -y "$package" &>/dev/null
+  fi
+}
+
+install_package_dnf() {
+  local package="$1"
+  if [[ "$VERBOSE" == true ]]; then
+    sudo dnf install -y "$package"
+  else
+    sudo dnf install -y "$package" &>/dev/null
+  fi
+}
+
+ensure_jq() {
+  if ! command -v jq &>/dev/null; then
+    info "'jq' is not installed. Installing 'jq'..."
+    install_package jq
+    info "'jq' installation completed."
+  else
+    verbose "'jq' is already installed."
+  fi
+}
+
+ensure_jq
+
+get_instance_metadata() {
   if curl -s --connect-timeout 2 http://169.254.169.254/latest/meta-data/ >/dev/null; then
     INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
     REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r .region)
@@ -60,7 +121,7 @@ get_aws_instance_metadata() {
   fi
 }
 
-get_aws_instance_metadata
+get_instance_metadata
 
 LOG_DIR="/var/log/nginx_status"
 ONLINE_LOG="$LOG_DIR/online.log"
