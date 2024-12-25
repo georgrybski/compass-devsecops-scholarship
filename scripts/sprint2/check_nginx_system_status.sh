@@ -1,20 +1,30 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 # =================================
 # Nginx System Status Checker
 # =================================
-# Checks the systemd/service status of Nginx and logs JSON results to:
-#   /var/log/nginx_status/online.log   (if online)
-#   /var/log/nginx_status/offline.log  (if offline)
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-RESET='\033[0m'
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+BLUE="\033[0;34m"
+RESET="\033[0m"
 
 info()    { echo -e "${GREEN}[INFO]${RESET} $*"; }
 error()   { echo -e "${RED}[ERROR]${RESET} $*" >&2; }
-verbose() { [[ "$VERBOSE" == true ]] && echo -e "[VERBOSE] $*"; }
+verbose() {
+  [[ "$VERBOSE" == true ]] && while IFS= read -r line; do
+    echo -e "${BLUE}[VERBOSE]${RESET} $line"
+  done
+}
+
+yell() { error "$0: $*" >&2; }
+die() {
+  local exit_code=${2:-111}
+  yell "$1"
+  exit "$exit_code"
+}
+try() { "$@" || die "cannot $*"; }
 
 usage() {
   cat <<EOF
@@ -42,8 +52,7 @@ parse_arguments() {
         usage
         ;;
       *)
-        error "Unknown option: $1"
-        usage
+        die "Unknown option: $1"
         ;;
     esac
     shift
@@ -52,50 +61,78 @@ parse_arguments() {
 
 detect_package_manager() {
   for pm in apt dnf; do
-    if command -v "$pm" &>/dev/null; then
-      echo "$pm"
-      return
-    fi
+    command -v "$pm" &>/dev/null || continue
+    echo "$pm"
+    return 0
   done
-  echo "unsupported"
+  return 1
 }
 
-install_package() {
-  local package="$1"
-  local pm
-  pm=$(detect_package_manager)
+map_package_name() {
+  local cmd="$1"
+  local pm="$2"
 
   case "$pm" in
     apt)
-      verbose "Using apt to install $package."
-      sudo apt-get update -y
-      sudo apt-get install -y "$package"
+      case "$cmd" in
+        jq)            echo "jq" ;;
+        ec2-metadata)  echo "cloud-utils" ;;
+        *) return 1 ;;
+      esac
       ;;
     dnf)
-      verbose "Using dnf to install $package."
-      sudo dnf install -y "$package"
+      case "$cmd" in
+        jq)            echo "jq" ;;
+        ec2-metadata)  echo "ec2-utils" ;;
+        *) return 1 ;;
+      esac
       ;;
     *)
-      error "Unsupported package manager. Cannot install $package."
-      exit 1
+      return 1
       ;;
   esac
+  return 0
+}
+
+install_package() {
+  local pkg="$1"
+  local pm="$2"
+
+  verbose "Using $pm to install '$pkg'"
+  case "$pm" in
+    apt)
+      try sudo apt-get update -y
+      try sudo apt-get install -y "$pkg"
+      ;;
+    dnf)
+      try sudo dnf install -y "$pkg"
+      ;;
+  esac
+  return 0
 }
 
 ensure_command_available() {
   local cmd="$1"
-  local pkg="$2"
-  if ! command -v "$cmd" &>/dev/null; then
-    info "'$cmd' is not installed. Installing '$pkg'..."
-    install_package "$pkg"
-    if ! command -v "$cmd" &>/dev/null; then
-      error "Failed to install '$cmd'."
-      exit 1
-    fi
-    info "'$cmd' installation completed."
-  else
+
+  command -v "$cmd" &>/dev/null && {
     verbose "'$cmd' is already installed."
-  fi
+    return 0
+  }
+
+  local pm
+  pm=$(detect_package_manager) || return 1
+
+  local pkg
+  pkg=$(map_package_name "$cmd" "$pm") || return 1
+
+  info "'$cmd' is not installed. Installing '$pkg'..."
+
+  install_package "$pkg" "$pm" &>/dev/null || return 1
+
+  command -v "$cmd" &>/dev/null || return 1
+
+  info "'$cmd' installation completed."
+  return 0
 }
 
 get_aws_instance_metadata() {
@@ -107,8 +144,12 @@ get_aws_instance_metadata() {
 
   while read -r line; do
     case "$line" in
-      instance-id*) INSTANCE_ID=$(echo "$line" | awk '{print $2}') ;;
-      region*) REGION=$(echo "$line" | awk '{print $2}' | sed 's/[a-z]$//') ;;
+      instance-id*)
+        INSTANCE_ID=$(echo "$line" | awk '{print $2}')
+        ;;
+      region*)
+        REGION=$(echo "$line" | awk '{print $2}')
+        ;;
     esac
   done <<< "$metadata"
 }
@@ -133,42 +174,46 @@ log_json() {
       message: $msg,
       instance_id: $iid,
       region: $rgn
-    }' | sudo tee -a "$log_file" >/dev/null
+    }' \
+     | sudo tee -a "$log_file" \
+     | verbose \
+     || die "Could not log JSON with jq and tee"
 }
 
 check_status_systemctl() {
   verbose "Using 'systemctl' to check Nginx status."
-  local status_output
-  status_output=$(systemctl is-active nginx)
 
-  if [[ "$status_output" == "active" ]]; then
-    log_json "online" "Nginx is running."
-    exit 0
-  fi
+  local status="offline" message="Nginx is not running" status_output
+  status_output=$(systemctl is-active nginx || echo "")
 
-  log_json "offline" "Nginx is not running."
-  exit 1
+  [[ "$status_output" == "active" ]] && {
+    status="online"
+    message="Nginx is running."
+  }
+
+  log_json "$status" "$message"
+  return 0
 }
 
 check_status_service() {
   verbose "Using 'service' command to check Nginx status."
-  local status_output
+  local status="offline" message="Nginx is not running." status_output
   status_output=$(service nginx status)
 
-  if echo "$status_output" | grep -qi "running"; then
-    log_json "online" "Nginx is running."
-    exit 0
-  fi
+  echo "$status_output" | grep -qi "running" && {
+    status="online" message="Nginx is running."
+  }
 
-  log_json "offline" "Nginx is not running."
-  exit 1
+  log_json "$status" "$message"
+  return 0
 }
 
 main() {
   parse_arguments "$@"
 
-  ensure_command_available "jq" "jq"
-  ensure_command_available "ec2-metadata" "ec2-metadata"
+  for cmd in "jq" "ec2-metadata"; do
+    ensure_command_available "$cmd" || die "Essential command '$cmd' could not be installed."
+  done
 
   get_aws_instance_metadata
 
@@ -177,9 +222,9 @@ main() {
   OFFLINE_LOG="$LOG_DIR/offline.log"
 
   info "Ensuring log directory: $LOG_DIR"
-  sudo mkdir -p "$LOG_DIR"
-  sudo touch "$ONLINE_LOG" "$OFFLINE_LOG"
-  sudo chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
+  try sudo mkdir -p "$LOG_DIR"
+  try sudo touch "$ONLINE_LOG" "$OFFLINE_LOG"
+  try sudo chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
 
   verbose "Checking Nginx status..."
 
@@ -188,9 +233,7 @@ main() {
   elif command -v service &>/dev/null; then
     check_status_service
   else
-    error "Neither 'systemctl' nor 'service' command is available."
-    log_json "offline" "No valid command to check Nginx status."
-    exit 1
+    die "Neither 'systemctl' nor 'service' command is available."
   fi
 }
 

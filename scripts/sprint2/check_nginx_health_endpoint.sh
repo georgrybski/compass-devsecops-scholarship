@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 # ===================================
 # Nginx Health Endpoint Checker
@@ -9,13 +9,27 @@ set -e
 #   /var/log/nginx_health_endpoint/online.log   (if 200)
 #   /var/log/nginx_health_endpoint/offline.log  (otherwise)
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-RESET='\033[0m'
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+BLUE="\033[0;34m"
+RESET="\033[0m"
 
 info()    { echo -e "${GREEN}[INFO]${RESET} $*"; }
 error()   { echo -e "${RED}[ERROR]${RESET} $*" >&2; }
-verbose() { [[ "$VERBOSE" == true ]] && echo -e "[VERBOSE] $*"; }
+verbose() {
+  [[ "$VERBOSE" == true ]] && while IFS= read -r line; do
+    echo -e "${BLUE}[VERBOSE]${RESET} $line"
+  done
+}
+
+yell() { error "$0: $*" >&2; }
+die() {
+  local exit_code=${2:-111}
+  yell "$1"
+  exit "$exit_code"
+}
+try() { "$@" || die "cannot $*"; }
+
 
 usage() {
   cat <<EOF
@@ -46,73 +60,98 @@ parse_arguments() {
         usage
         ;;
       -*)
-        error "Unknown option: $1"
-        usage
+        die "Unknown option: $1"
         ;;
       *)
         if [[ -z "$BASE_URL" ]]; then
           BASE_URL="$1"
         else
-          error "Multiple BASE_URLs provided."
-          usage
+          die "Multiple BASE_URLs provided."
         fi
         ;;
     esac
     shift
   done
 
-  if [[ -z "$BASE_URL" ]]; then
-    error "BASE_URL is required."
-    usage
-  fi
+  [[ -z "$BASE_URL" ]] && die "BASE_URL is required."
 }
 
 detect_package_manager() {
   for pm in apt dnf; do
-    if command -v "$pm" &>/dev/null; then
-      echo "$pm"
-      return
-    fi
+    command -v "$pm" &>/dev/null || continue
+    echo "$pm"
+    return 0
   done
-  echo "unsupported"
+  return 1
 }
 
-install_package() {
-  local package="$1"
-  local pm
-  pm=$(detect_package_manager)
+map_package_name() {
+  local cmd="$1"
+  local pm="$2"
 
   case "$pm" in
     apt)
-      verbose "Using apt to install $package."
-      sudo apt-get update -y
-      sudo apt-get install -y "$package"
+      case "$cmd" in
+        jq)            echo "jq" ;;
+        ec2-metadata)  echo "cloud-utils" ;;
+        curl)          echo "curl" ;;
+        *) return 1 ;;
+      esac
       ;;
     dnf)
-      verbose "Using dnf to install $package."
-      sudo dnf install -y "$package"
+      case "$cmd" in
+        jq)            echo "jq" ;;
+        ec2-metadata)  echo "ec2-utils" ;;
+        curl)          echo "curl" ;;
+        *) return 1 ;;
+      esac
       ;;
     *)
-      error "Unsupported package manager. Cannot install $package."
-      exit 1
+      return 1
       ;;
   esac
+  return 0
+}
+
+install_package() {
+  local pkg="$1"
+  local pm="$2"
+
+  verbose "Using $pm to install '$pkg'"
+  case "$pm" in
+    apt)
+      try sudo apt-get update -y
+      try sudo apt-get install -y "$pkg"
+      ;;
+    dnf)
+      try sudo dnf install -y "$pkg"
+      ;;
+  esac
+  return 0
 }
 
 ensure_command_available() {
   local cmd="$1"
-  local pkg="$2"
-  if ! command -v "$cmd" &>/dev/null; then
-    info "'$cmd' is not installed. Installing '$pkg'..."
-    install_package "$pkg"
-    if ! command -v "$cmd" &>/dev/null; then
-      error "Failed to install '$cmd'."
-      exit 1
-    fi
-    info "'$cmd' installation completed."
-  else
+
+  command -v "$cmd" &>/dev/null && {
     verbose "'$cmd' is already installed."
-  fi
+    return 0
+  }
+
+  local pm
+  pm=$(detect_package_manager) || return 1
+
+  local pkg
+  pkg=$(map_package_name "$cmd" "$pm") || return 1
+
+  info "'$cmd' is not installed. Installing '$pkg'..."
+
+  install_package "$pkg" "$pm" &>/dev/null || return 1
+
+  command -v "$cmd" &>/dev/null || return 1
+
+  info "'$cmd' installation completed."
+  return 0
 }
 
 get_aws_instance_metadata() {
@@ -124,8 +163,12 @@ get_aws_instance_metadata() {
 
   while read -r line; do
     case "$line" in
-      instance-id*) INSTANCE_ID=$(echo "$line" | awk '{print $2}') ;;
-      region*) REGION=$(echo "$line" | awk '{print $2}' | sed 's/[a-z]$//') ;;
+      instance-id*)
+        INSTANCE_ID=$(echo "$line" | awk '{print $2}')
+        ;;
+      region*)
+        REGION=$(echo "$line" | awk '{print $2}')
+        ;;
     esac
   done <<< "$metadata"
 }
@@ -136,11 +179,7 @@ log_json() {
   local log_file
   log_file="$([[ "$status" == "online" ]] && echo "$ONLINE_LOG" || echo "$OFFLINE_LOG")"
 
-  if [[ -z "$HTTP_CODE" ]]; then
-    http_code_json="null"
-  else
-    http_code_json="$HTTP_CODE"
-  fi
+  [[ -z "$HTTP_CODE" ]] && http_code_json="null" || http_code_json="$HTTP_CODE"
 
   jq -nc \
     --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
@@ -158,33 +197,34 @@ log_json() {
       http_code: $hc,
       instance_id: $iid,
       region: $rgn
-    }' | sudo tee -a "$log_file" >/dev/null
+    }' \
+     | sudo tee -a "$log_file" \
+     | verbose \
+     || die "Could not log JSON with jq and tee"
 }
 
 perform_health_check() {
   local address="$1/health"
   verbose "Checking $address ..."
 
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$address" || true)
+  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$address" || echo "")
+  local status="offline" message="Nginx health endpoint did not return a valid HTTP code."
 
-  if [[ "$HTTP_CODE" == "200" ]]; then
-    log_json "online" "Nginx health endpoint returned code $HTTP_CODE."
-    exit 0
-  fi
+  [[ -z "$HTTP_CODE" ]] && {
+    message="Nginx health endpoint returned code $HTTP_CODE."
+    status="online"
+  }
 
-  if [[ -z "$HTTP_CODE" ]]; then
-    log_json "offline" "Nginx health endpoint did not return a valid HTTP code."
-  else
-    log_json "offline" "Nginx health endpoint returned code $HTTP_CODE."
-  fi
-  exit 1
+  log_json "$status" "$message"
+  return 0
 }
 
 main() {
   parse_arguments "$@"
 
-  ensure_command_available "jq" "jq"
-  ensure_command_available "ec2-metadata" "ec2-metadata"
+  for cmd in "jq" "ec2-metadata" "curl"; do
+    ensure_command_available "$cmd" || die "Essential command '$cmd' could not be installed."
+  done
 
   get_aws_instance_metadata
 
@@ -193,9 +233,9 @@ main() {
   OFFLINE_LOG="$LOG_DIR/offline.log"
 
   info "Ensuring log directory: $LOG_DIR"
-  sudo mkdir -p "$LOG_DIR"
-  sudo touch "$ONLINE_LOG" "$OFFLINE_LOG"
-  sudo chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
+  try sudo mkdir -p "$LOG_DIR"
+  try sudo touch "$ONLINE_LOG" "$OFFLINE_LOG"
+  try sudo chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
 
   perform_health_check "$BASE_URL"
 }
