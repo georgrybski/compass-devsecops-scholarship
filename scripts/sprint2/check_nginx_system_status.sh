@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
-# ==============================
+# =================================
 # Nginx System Status Checker
-# ==============================
+# =================================
 # Checks the systemd/service status of Nginx and logs JSON results to:
 #   /var/log/nginx_status/online.log   (if online)
 #   /var/log/nginx_status/offline.log  (if offline)
@@ -17,15 +17,17 @@ error()   { echo -e "${RED}[ERROR]${RESET} $*" >&2; }
 verbose() { [[ "$VERBOSE" == true ]] && echo -e "[VERBOSE] $*"; }
 
 usage() {
-  echo "Usage: $0 [OPTIONS]"
-  echo
-  echo "Checks the Nginx service status and appends JSON log entries to:"
-  echo "  /var/log/nginx_status/online.log   or"
-  echo "  /var/log/nginx_status/offline.log"
-  echo
-  echo "Options:"
-  echo "  -v, --verbose  Show verbose internal command logs"
-  echo "  -h, --help     Show this help message"
+  cat <<EOF
+Usage: $0 [OPTIONS]
+
+Checks the Nginx service status and appends JSON log entries to:
+  /var/log/nginx_status/online.log   or
+  /var/log/nginx_status/offline.log
+
+Options:
+  -v, --verbose  Show verbose internal command logs
+  -h, --help     Show this help message
+EOF
   exit 1
 }
 
@@ -35,7 +37,6 @@ parse_arguments() {
     case "$1" in
       -v|--verbose)
         VERBOSE=true
-        shift
         ;;
       -h|--help)
         usage
@@ -45,10 +46,9 @@ parse_arguments() {
         usage
         ;;
     esac
+    shift
   done
 }
-
-parse_arguments "$@"
 
 detect_package_manager() {
   for pm in apt dnf; do
@@ -67,158 +67,131 @@ install_package() {
 
   case "$pm" in
     apt)
-      install_package_apt "$package"
+      verbose "Using apt to install $package."
+      sudo apt-get update -y
+      sudo apt-get install -y "$package"
       ;;
     dnf)
-      install_package_dnf "$package"
+      verbose "Using dnf to install $package."
+      sudo dnf install -y "$package"
       ;;
-    unsupported)
+    *)
       error "Unsupported package manager. Cannot install $package."
       exit 1
       ;;
   esac
 }
 
-install_package_apt() {
-  local package="$1"
-  if [[ "$VERBOSE" == true ]]; then
-    sudo apt-get update -y
-    sudo apt-get install -y "$package"
-  else
-    sudo apt-get update -y &>/dev/null
-    sudo apt-get install -y "$package" &>/dev/null
-  fi
-}
-
-install_package_dnf() {
-  local package="$1"
-  if [[ "$VERBOSE" == true ]]; then
-    sudo dnf install -y "$package"
-  else
-    sudo dnf install -y "$package" &>/dev/null
-  fi
-}
-
-ensure_jq() {
-  if ! command -v jq &>/dev/null; then
-    info "'jq' is not installed. Installing 'jq'..."
-    install_package jq
-    info "'jq' installation completed."
-  else
-    verbose "'jq' is already installed."
-  fi
-}
-
-ensure_jq
-
-ensure_ec2_metadata() {
-  if ! command -v ec2-metadata &>/dev/null; then
-    info "'ec2-metadata' is not installed. Installing 'ec2-metadata'..."
-    install_package ec2-metadata
-    if command -v ec2-metadata &>/dev/null; then
-      info "'ec2-metadata' installation completed."
-    else
-      error "Failed to install 'ec2-metadata'. Ensure it is available in your package repositories."
+ensure_command_available() {
+  local cmd="$1"
+  local pkg="$2"
+  if ! command -v "$cmd" &>/dev/null; then
+    info "'$cmd' is not installed. Installing '$pkg'..."
+    install_package "$pkg"
+    if ! command -v "$cmd" &>/dev/null; then
+      error "Failed to install '$cmd'."
       exit 1
     fi
+    info "'$cmd' installation completed."
   else
-    verbose "'ec2-metadata' is already installed."
+    verbose "'$cmd' is already installed."
   fi
 }
 
-ensure_ec2_metadata
-
 get_aws_instance_metadata() {
-  METADATA_OUTPUT=$(ec2-metadata -i -R 2>/dev/null) || METADATA_OUTPUT=""
+  local metadata
+  metadata=$(ec2-metadata -i -R 2>/dev/null || echo "")
 
   INSTANCE_ID="localhost"
   REGION="unknown"
 
   while read -r line; do
     case "$line" in
-      instance-id*)
-        INSTANCE_ID=$(echo "$line" | awk '{print $2}')
-        ;;
-      region*)
-        REGION=$(echo "$line" | awk '{print $2}' | sed 's/[a-z]$//') # Remove the last character if it's the availability zone
-        ;;
+      instance-id*) INSTANCE_ID=$(echo "$line" | awk '{print $2}') ;;
+      region*) REGION=$(echo "$line" | awk '{print $2}' | sed 's/[a-z]$//') ;;
     esac
-  done <<< "$METADATA_OUTPUT"
+  done <<< "$metadata"
 }
 
-get_aws_instance_metadata
-
-LOG_DIR="/var/log/nginx_status"
-ONLINE_LOG="$LOG_DIR/online.log"
-OFFLINE_LOG="$LOG_DIR/offline.log"
-
-info "Ensuring log directory: $LOG_DIR"
-sudo mkdir -p "$LOG_DIR"
-sudo touch "$ONLINE_LOG" "$OFFLINE_LOG"
-sudo chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
-
-json_log() {
+log_json() {
   local status="$1"
   local message="$2"
-  local timestamp
-  timestamp=$(date +"%Y-%m-%dT%H:%M:%SZ")
-
-  local json_line
-  json_line=$(
-    jq -nc \
-      --arg ts "$timestamp" \
-      --arg svc "nginx" \
-      --arg st "$status" \
-      --arg msg "$message" \
-      --arg iid "$INSTANCE_ID" \
-      --arg rgn "$REGION" \
-      '{
-        "timestamp": $ts,
-        "service": $svc,
-        "status": $st,
-        "message": $msg,
-        "instance_id": $iid,
-        "region": $rgn
-      }'
-  )
-
   local log_file
-  if [[ "$status" == "online" ]]; then
-    log_file="$ONLINE_LOG"
-  else
-    log_file="$OFFLINE_LOG"
-  fi
+  log_file="$([[ "$status" == "online" ]] && echo "$ONLINE_LOG" || echo "$OFFLINE_LOG")"
 
-  echo "$json_line" | sudo tee -a "$log_file" >/dev/null
+  jq -nc \
+    --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+    --arg svc "nginx" \
+    --arg st "$status" \
+    --arg msg "$message" \
+    --arg iid "$INSTANCE_ID" \
+    --arg rgn "$REGION" \
+    '{
+      timestamp: $ts,
+      service: $svc,
+      status: $st,
+      message: $msg,
+      instance_id: $iid,
+      region: $rgn
+    }' | sudo tee -a "$log_file" >/dev/null
 }
 
-verbose "Checking Nginx status..."
-
-if command -v systemctl &>/dev/null; then
+check_status_systemctl() {
   verbose "Using 'systemctl' to check Nginx status."
-  STATUS_OUTPUT=$(systemctl is-active nginx || true)
-  if [[ "$STATUS_OUTPUT" == "active" ]]; then
-    STATUS="online"
-    MESSAGE="Nginx is running."
-  else
-    STATUS="offline"
-    MESSAGE="Nginx is not running."
-  fi
-elif command -v service &>/dev/null; then
-  verbose "Using 'service' command to check Nginx status."
-  STATUS_OUTPUT=$(service nginx status || true)
-  if echo "$STATUS_OUTPUT" | grep -qi "running"; then
-    STATUS="online"
-    MESSAGE="Nginx is running."
-  else
-    STATUS="offline"
-    MESSAGE="Nginx is not running."
-  fi
-else
-  error "Neither 'systemctl' nor 'service' command is available."
-  STATUS="offline"
-  MESSAGE="No valid command to check Nginx status."
-fi
+  local status_output
+  status_output=$(systemctl is-active nginx)
 
-json_log "$STATUS" "$MESSAGE"
-exit "$([[ "$STATUS" == "online" ]] && echo 0 || echo 1)"
+  if [[ "$status_output" == "active" ]]; then
+    log_json "online" "Nginx is running."
+    exit 0
+  fi
+
+  log_json "offline" "Nginx is not running."
+  exit 1
+}
+
+check_status_service() {
+  verbose "Using 'service' command to check Nginx status."
+  local status_output
+  status_output=$(service nginx status)
+
+  if echo "$status_output" | grep -qi "running"; then
+    log_json "online" "Nginx is running."
+    exit 0
+  fi
+
+  log_json "offline" "Nginx is not running."
+  exit 1
+}
+
+main() {
+  parse_arguments "$@"
+
+  ensure_command_available "jq" "jq"
+  ensure_command_available "ec2-metadata" "ec2-metadata"
+
+  get_aws_instance_metadata
+
+  LOG_DIR="/var/log/nginx_status"
+  ONLINE_LOG="$LOG_DIR/online.log"
+  OFFLINE_LOG="$LOG_DIR/offline.log"
+
+  info "Ensuring log directory: $LOG_DIR"
+  sudo mkdir -p "$LOG_DIR"
+  sudo touch "$ONLINE_LOG" "$OFFLINE_LOG"
+  sudo chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
+
+  verbose "Checking Nginx status..."
+
+  if command -v systemctl &>/dev/null; then
+    check_status_systemctl
+  elif command -v service &>/dev/null; then
+    check_status_service
+  else
+    error "Neither 'systemctl' nor 'service' command is available."
+    log_json "offline" "No valid command to check Nginx status."
+    exit 1
+  fi
+}
+
+main "$@"
