@@ -121,18 +121,42 @@ ensure_jq() {
 
 ensure_jq
 
-# Function to Retrieve AWS Instance Metadata
-get_instance_metadata() {
-  if curl -s --connect-timeout 2 http://169.254.169.254/latest/meta-data/ >/dev/null; then
-    INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-    REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r .region)
+ensure_ec2_metadata() {
+  if ! command -v ec2-metadata &>/dev/null; then
+    info "'ec2-metadata' is not installed. Installing 'ec2-metadata'..."
+    install_package ec2-metadata
+    if command -v ec2-metadata &>/dev/null; then
+      info "'ec2-metadata' installation completed."
+    else
+      error "Failed to install 'ec2-metadata'. Ensure it is available in your package repositories."
+      exit 1
+    fi
   else
-    INSTANCE_ID="${INSTANCE_ID:-localhost}"
-    REGION="${REGION:-unknown}"
+    verbose "'ec2-metadata' is already installed."
   fi
 }
 
-get_instance_metadata
+ensure_ec2_metadata
+
+get_aws_instance_metadata() {
+  METADATA_OUTPUT=$(ec2-metadata -i -R 2>/dev/null) || METADATA_OUTPUT=""
+
+  INSTANCE_ID="localhost"
+  REGION="unknown"
+
+  while read -r line; do
+    case "$line" in
+      instance-id*)
+        INSTANCE_ID=$(echo "$line" | awk '{print $2}')
+        ;;
+      region*)
+        REGION=$(echo "$line" | awk '{print $2}' | sed 's/[a-z]$//') # Remove the last character if it's the availability zone
+        ;;
+    esac
+  done <<< "$METADATA_OUTPUT"
+}
+
+get_aws_instance_metadata
 
 LOG_DIR="/var/log/nginx_health_endpoint"
 ONLINE_LOG="$LOG_DIR/online.log"
