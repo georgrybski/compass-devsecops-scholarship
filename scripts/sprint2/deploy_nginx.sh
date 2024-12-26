@@ -149,7 +149,7 @@ server {
 
     location /health {
         access_log off;
-        return 200;
+        return 200 "OK";
     }
 }
 EOF
