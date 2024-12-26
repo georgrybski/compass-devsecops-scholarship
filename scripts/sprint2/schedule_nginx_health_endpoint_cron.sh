@@ -115,31 +115,32 @@ ensure_command_available() {
 }
 
 setup_cron_job() {
-  local cron_job="$CRON_JOB_SCHEDULE sudo $LOCAL_SCRIPT_PATH --address $ADDRESS >> $CRON_LOG_FILE 2>&1"
-  local user="${TARGET_USER:-ec2-user}"
+  local cron_job="$CRON_JOB_SCHEDULE sudo $LOCAL_SCRIPT_PATH -v $ADDRESS >> $CRON_LOG_FILE 2>&1" user="${TARGET_USER:-ec2-user}"
 
   info "Ensuring cron log directory: $CRON_LOG_DIR"
-  sudo mkdir -p "$CRON_LOG_DIR" || die "Failed to create log directory: $CRON_LOG_DIR"
+  mkdir -p "$CRON_LOG_DIR" || die "Failed to create log directory: $CRON_LOG_DIR"
 
-  if [[ -f "$CRON_LOG_FILE" ]]; then
+  info "Setting ownership of log directory to $user"
+  chown -R "$user:$user" "$CRON_LOG_DIR" || die "Failed to set ownership of $CRON_LOG_DIR to $user."
+
+  [[ -f "$CRON_LOG_FILE" ]] && {
     info "Removing old log file: $CRON_LOG_FILE"
-    sudo rm -f "$CRON_LOG_FILE" || die "Failed to remove old log file: $CRON_LOG_FILE"
-  else
-    info "No existing log file to remove."
-  fi
+    rm -f "$CRON_LOG_FILE" || die "Failed to remove old log file: $CRON_LOG_FILE"
+  }
 
-  sudo touch "$CRON_LOG_FILE" || die "Failed to create log file: $CRON_LOG_FILE"
-  sudo chmod 644 "$CRON_LOG_FILE" || die "Failed to set permissions on log file: $CRON_LOG_FILE"
+  touch "$CRON_LOG_FILE" || die "Failed to create log file: $CRON_LOG_FILE"
+  chmod 644 "$CRON_LOG_FILE" || die "Failed to set permissions on log file: $CRON_LOG_FILE"
 
-  info "Updating cron jobs for user: $user..."
+  info "Updating cron jobs..."
   {
-    sudo crontab -u "$user" -l 2>/dev/null | grep -v "$LOCAL_SCRIPT_PATH" || true
+    crontab -u "$user" -l 2>/dev/null | grep -v "$LOCAL_SCRIPT_PATH" || true
     echo "$cron_job"
-  } | sudo crontab -u "$user" - || die "Failed to update cron jobs for user: $user."
+  } | crontab -u "$user" - || die "Failed to update cron jobs for user: $user."
 
   info "Cron job successfully added for user: $user"
-  sudo crontab -u "$user" -l | grep "$LOCAL_SCRIPT_PATH"
+  crontab -u "$user" -l | grep "$LOCAL_SCRIPT_PATH"
 }
+
 
 download_script() {
   info "Downloading monitoring script to $LOCAL_SCRIPT_PATH..."
