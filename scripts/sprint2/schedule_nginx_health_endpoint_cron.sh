@@ -68,10 +68,10 @@ install_package() {
   info "Using $pm to install '$pkg'"
   case "$pm" in
     apt) {
-      try sudo apt-get update -y
-      try sudo apt-get install -y "$pkg"
+      try apt-get update -y
+      try apt-get install -y "$pkg"
     } ;;
-    dnf) try sudo dnf install -y "$pkg" ;;
+    dnf) try dnf install -y "$pkg" ;;
     *) die "Unsupported package manager: $pm" ;;
   esac
   return 0
@@ -94,35 +94,31 @@ ensure_command_available() {
   command -v "$cmd" &>/dev/null || die "'$cmd' is still not available after installation."
 }
 
-download_script() {
-  if [[ ! -f "$LOCAL_SCRIPT_PATH" ]]; then
-    info "Downloading monitoring script to $LOCAL_SCRIPT_PATH..."
-    curl -fsSL "$REPO_URL" -o "$LOCAL_SCRIPT_PATH" || die "Failed to download the script from $REPO_URL."
-  else
-    info "Script already exists at $LOCAL_SCRIPT_PATH. Skipping download."
-  fi
-
-  info "Setting ownership and permissions for $LOCAL_SCRIPT_PATH"
-  sudo chown root:root "$LOCAL_SCRIPT_PATH" || die "Failed to change ownership to root."
-  sudo chmod 755 "$LOCAL_SCRIPT_PATH" || die "Failed to set permissions on the script."
-}
-
 setup_cron_job() {
   local cron_job="$CRON_JOB_SCHEDULE sudo $LOCAL_SCRIPT_PATH --address $ADDRESS >> $CRON_LOG_FILE 2>&1"
 
   info "Ensuring cron log directory: $CRON_LOG_DIR"
-  sudo mkdir -p "$CRON_LOG_DIR" || die "Failed to create log directory: $CRON_LOG_DIR"
-  sudo touch "$CRON_LOG_FILE" || die "Failed to create log file: $CRON_LOG_FILE"
-  sudo chmod 644 "$CRON_LOG_FILE" || die "Failed to set permissions on log file: $CRON_LOG_FILE"
+  mkdir -p "$CRON_LOG_DIR" || die "Failed to create log directory: $CRON_LOG_DIR"
+  touch "$CRON_LOG_FILE" || die "Failed to create log file: $CRON_LOG_FILE"
+  chmod 644 "$CRON_LOG_FILE" || die "Failed to set permissions on log file: $CRON_LOG_FILE"
 
-  info "Cleaning up any existing cron jobs for this script..."
-  (crontab -l 2>/dev/null | grep -v "$LOCAL_SCRIPT_PATH") | sudo crontab - || die "Failed to clean up old cron jobs."
-
-  info "Adding new cron job..."
-  (crontab -l 2>/dev/null; echo "$cron_job") | sudo crontab - || die "Failed to add the cron job."
+  info "Updating cron jobs..."
+  {
+    crontab -l 2>/dev/null | grep -v "$LOCAL_SCRIPT_PATH"
+    echo "$cron_job"
+  } | crontab - || die "Failed to update cron jobs."
 
   info "Cron job successfully added:"
-  sudo crontab -l | grep "$LOCAL_SCRIPT_PATH"
+  crontab -l | grep "$LOCAL_SCRIPT_PATH"
+}
+
+download_script() {
+  info "Downloading monitoring script to $LOCAL_SCRIPT_PATH..."
+  curl -fsSL "$REPO_URL" -o "$LOCAL_SCRIPT_PATH" || die "Failed to download the script from $REPO_URL."
+
+  info "Setting ownership and permissions for $LOCAL_SCRIPT_PATH"
+  chown root:root "$LOCAL_SCRIPT_PATH" || die "Failed to change ownership to root."
+  chmod 755 "$LOCAL_SCRIPT_PATH" || die "Failed to set permissions on the script."
 }
 
 
