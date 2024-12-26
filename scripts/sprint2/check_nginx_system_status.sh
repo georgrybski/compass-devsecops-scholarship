@@ -214,7 +214,7 @@ main() {
   info "Ensuring log directory: $LOG_DIR"
   try mkdir -p "$LOG_DIR"
   try touch "$ONLINE_LOG" "$OFFLINE_LOG"
-  try chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
+  try chmod 644 "$ONLINE_LOG" "$OFFLINE_LOG"
 
   check_nginx_status
 }

@@ -216,7 +216,7 @@ main() {
   info "Ensuring log directory: $LOG_DIR"
   try mkdir -p "$LOG_DIR"
   try touch "$ONLINE_LOG" "$OFFLINE_LOG"
-  try chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
+  chmod 644 "$ONLINE_LOG" "$OFFLINE_LOG"
 
   perform_health_check "$BASE_URL"
 }
