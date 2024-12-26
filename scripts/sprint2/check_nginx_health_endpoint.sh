@@ -160,7 +160,7 @@ perform_health_check() {
   HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" "$address")" || curl_exit_code=$?
 
   [[ $curl_exit_code -ne 0 ]] && {
-    status="unknown"
+    status="offline"
     message="Curl failed with exit code $curl_exit_code while accessing $address."
     log_json "$status" "$message"
     return 0
