@@ -58,7 +58,7 @@ parse_arguments() {
   BASE_URL="$1"
 }
 
-ensure_sudo() { [[ "$EUID" -eq 0 ]] || sudo -n true 2>/dev/null || die "sudo privileges are required to run this script."; }
+ensure_sudo() { sudo -n true 2>/dev/null || die "sudo privileges are required to run this script."; }
 
 detect_package_manager() {
   for pm in apt dnf; do
