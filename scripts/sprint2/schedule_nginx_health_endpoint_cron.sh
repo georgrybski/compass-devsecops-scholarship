@@ -21,10 +21,10 @@ EOF
     exit 1
 }
 
-info()    { echo -e "\033[0;32m[INFO]\033[0m $*"; }
-error()   { echo -e "\033[0;31m[ERROR]\033[0m $*" >&2; }
-die()     { error "$*"; exit 1; }
-try()     { "$@" || die "Command failed: $*"; }
+info() { echo -e "\033[0;32m[INFO]\033[0m $*"; }
+error() { echo -e "\033[0;31m[ERROR]\033[0m $*" >&2; }
+die() { error "$*"; exit 1; }
+try() { "$@" || die "Command failed: $*"; }
 
 ensure_sudo() { sudo -n true 2>/dev/null || die "Script requires sudo privileges."; }
 
@@ -67,13 +67,11 @@ install_package() {
 
   info "Using $pm to install '$pkg'"
   case "$pm" in
-    apt)
+    apt) {
       try sudo apt-get update -y
       try sudo apt-get install -y "$pkg"
-      ;;
-    dnf)
-      try sudo dnf install -y "$pkg"
-      ;;
+    } ;;
+    dnf) try sudo dnf install -y "$pkg" ;;
     *) die "Unsupported package manager: $pm" ;;
   esac
   return 0
