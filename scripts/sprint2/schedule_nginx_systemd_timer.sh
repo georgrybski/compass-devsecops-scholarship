@@ -95,7 +95,10 @@ enable_and_start_timer() {
 
 verify_timer() {
   info "Verifying the systemd timer setup"
-  systemctl list-timers | grep -i "$SERVICE_NAME" || die "Timer setup verification failed."
+  systemctl list-timers --all | grep -i "$SERVICE_NAME" || die "Timer setup verification failed."
+
+  info "Timer verified successfully:"
+  systemctl list-timers --all | grep -i "$SERVICE_NAME"
 }
 
 main() {
