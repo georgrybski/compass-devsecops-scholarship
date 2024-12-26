@@ -104,34 +104,40 @@ download_script() {
     info "Script already exists at $LOCAL_SCRIPT_PATH. Skipping download."
   fi
 
-  chmod +x "$LOCAL_SCRIPT_PATH" || die "Failed to make the script executable."
+  info "Setting ownership and permissions for $LOCAL_SCRIPT_PATH"
+  sudo chown root:root "$LOCAL_SCRIPT_PATH" || die "Failed to change ownership to root."
+  sudo chmod 755 "$LOCAL_SCRIPT_PATH" || die "Failed to set permissions on the script."
 }
 
 setup_cron_job() {
-  local cron_job="$CRON_JOB_SCHEDULE $LOCAL_SCRIPT_PATH --address $ADDRESS >> $CRON_LOG_FILE 2>&1"
+  local cron_job="$CRON_JOB_SCHEDULE sudo $LOCAL_SCRIPT_PATH --address $ADDRESS >> $CRON_LOG_FILE 2>&1"
 
   info "Ensuring cron log directory: $CRON_LOG_DIR"
-  mkdir -p "$CRON_LOG_DIR" || die "Failed to create log directory: $CRON_LOG_DIR"
-  touch "$CRON_LOG_FILE" || die "Failed to create log file: $CRON_LOG_FILE"
-  chmod 644 "$CRON_LOG_FILE" || die "Failed to set permissions on log file: $CRON_LOG_FILE"
+  sudo mkdir -p "$CRON_LOG_DIR" || die "Failed to create log directory: $CRON_LOG_DIR"
+  sudo touch "$CRON_LOG_FILE" || die "Failed to create log file: $CRON_LOG_FILE"
+  sudo chmod 644 "$CRON_LOG_FILE" || die "Failed to set permissions on log file: $CRON_LOG_FILE"
 
-  info "Setting up cron job..."
-  (crontab -l 2>/dev/null | grep -v "$LOCAL_SCRIPT_PATH"; echo "$cron_job") | crontab - || die "Failed to add the cron job."
+  info "Cleaning up any existing cron jobs for this script..."
+  (crontab -l 2>/dev/null | grep -v "$LOCAL_SCRIPT_PATH") | sudo crontab - || die "Failed to clean up old cron jobs."
+
+  info "Adding new cron job..."
+  (crontab -l 2>/dev/null; echo "$cron_job") | sudo crontab - || die "Failed to add the cron job."
 
   info "Cron job successfully added:"
-  crontab -l | grep "$LOCAL_SCRIPT_PATH"
+  sudo crontab -l | grep "$LOCAL_SCRIPT_PATH"
 }
+
 
 main() {
   ensure_sudo
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --address)
+      --address) {
         shift
         [[ $# -gt 0 ]] || die "Missing value for --address"
         ADDRESS="$1"
-        ;;
+      } ;;
       -h|--help) usage ;;
       *) die "Unknown argument: $1" ;;
     esac
