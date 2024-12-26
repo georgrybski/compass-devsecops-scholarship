@@ -166,7 +166,6 @@ perform_health_check() {
     return 0
   }
 
-  # If curl exit code = 0 but no status is recorded, that's odd
   [[ -z "${HTTP_CODE:-}" ]] && {
     status="offline"
     message="Curl succeeded but no HTTP code was captured. This is unexpected."
