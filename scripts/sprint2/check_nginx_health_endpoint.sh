@@ -177,17 +177,23 @@ log_json() {
 }
 
 perform_health_check() {
-  local address="$1/health"
+  local address="$1/health" curl_exit_code=0 status message
   verbose "Checking $address ..."
+  HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" "$address")" || curl_exit_code=$?
 
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$address" || echo "")
-  local status="offline" message="Nginx health endpoint did not return a valid HTTP code."
-
-  [[ -n "$HTTP_CODE" ]] && {
-    message="Nginx health endpoint returned code $HTTP_CODE."
-    status="online"
+  [[ $curl_exit_code -ne 0 ]] && {
+    status="unknown" message="Curl failed with exit code $curl_exit_code while accessing $address."
+    log_json "$status" "$message"
+    return 0
   }
 
+  [[ -z "$HTTP_CODE" ]] && {
+    status="offline" message="Curl succeeded but no HTTP code was captured. This is unexpected."
+    log_json "$status" "$message"
+    return 0
+  }
+
+  status="online" message="Nginx health endpoint returned code $HTTP_CODE."
   log_json "$status" "$message"
   return 0
 }
