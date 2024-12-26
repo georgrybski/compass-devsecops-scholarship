@@ -85,7 +85,7 @@ map_package_name() {
     dnf)
       case "$cmd" in
         jq) echo "jq" ;;
-        ec2-metadata) echo "ec2-utils" ;;
+        ec2-metadata) echo "ec2-metadata" ;;
         curl) echo "curl" ;;
         *) return 1 ;;
       esac
