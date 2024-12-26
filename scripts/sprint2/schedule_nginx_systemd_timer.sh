@@ -6,9 +6,6 @@ SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 TIMER_FILE="/etc/systemd/system/${SERVICE_NAME}.timer"
 SCRIPT_URL="https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_system_status.sh"
 SCRIPT_PATH="/usr/local/bin/check_nginx_system_status.sh"
-LOG_DIR="/var/log/nginx_status"
-ONLINE_LOG="$LOG_DIR/online.log"
-OFFLINE_LOG="$LOG_DIR/offline.log"
 
 usage() {
   cat <<EOF
@@ -43,14 +40,6 @@ download_script() {
   sudo curl -fsSL "$SCRIPT_URL" -o "$SCRIPT_PATH"
   sudo chmod +x "$SCRIPT_PATH"
   [[ -x "$SCRIPT_PATH" ]] || die "Failed to download or set up the script at $SCRIPT_PATH"
-}
-
-create_log_directory() {
-  info "Setting up log directory: $LOG_DIR"
-  sudo mkdir -p "$LOG_DIR"
-  sudo touch "$ONLINE_LOG" "$OFFLINE_LOG"
-  sudo chmod 644 "$ONLINE_LOG" "$OFFLINE_LOG"
-  sudo chown -R root:root "$LOG_DIR"
 }
 
 create_service_file() {
@@ -113,7 +102,6 @@ main() {
 
   cleanup_previous_setup
   download_script
-  create_log_directory
   create_service_file
   create_timer_file
   reload_systemd
