@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_URL="https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/3-automate-nginx-status-check-scripts/scripts/sprint2/check_nginx_health_endpoint.sh"
+REPO_URL="https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_health_endpoint.sh"
 LOCAL_SCRIPT_PATH="/usr/local/bin/check_nginx_health_endpoint.sh"
 CRON_LOG_DIR="/var/log/nginx_health_cron"
 CRON_LOG_FILE="$CRON_LOG_DIR/health_check.log"
