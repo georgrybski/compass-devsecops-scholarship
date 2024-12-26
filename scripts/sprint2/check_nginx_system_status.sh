@@ -49,7 +49,12 @@ parse_arguments() {
   done
 }
 
-ensure_sudo() { sudo -n true 2>/dev/null || sudo -v || die "sudo privileges are required to run this script."; }
+ensure_sudo() {
+  "$EUID" -eq 0 && return 0
+  sudo -n true 2>/dev/null && return 0
+  sudo -v && return 0
+  die "sudo privileges are required to run this script."
+}
 
 detect_package_manager() {
   for pm in apt dnf; do
@@ -190,9 +195,10 @@ check_status_service() {
 }
 
 check_nginx_status() {
-    command -v systemctl &>/dev/null && check_status_systemctl && return 0
-    command -v service &>/dev/null && check_status_service && return 0
-    die "Neither 'systemctl' nor 'service' command is available."
+  verbose "Checking Nginx status..."
+  command -v systemctl &>/dev/null && check_status_systemctl && return 0
+  command -v service &>/dev/null && check_status_service && return 0
+  die "Neither 'systemctl' nor 'service' command is available."
 }
 
 main() {
@@ -215,7 +221,6 @@ main() {
   try touch "$ONLINE_LOG" "$OFFLINE_LOG"
   try chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
 
-  verbose "Checking Nginx status..."
   check_nginx_status
 }
 
