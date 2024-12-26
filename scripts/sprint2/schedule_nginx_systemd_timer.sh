@@ -4,7 +4,7 @@ set -euo pipefail
 SERVICE_NAME="nginx_status_check"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 TIMER_FILE="/etc/systemd/system/${SERVICE_NAME}.timer"
-SCRIPT_URL="https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_system_status.sh"
+SCRIPT_URL="https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/3-automate-nginx-status-check-scripts/scripts/sprint2/check_nginx_system_status.sh"
 SCRIPT_PATH="/usr/local/bin/check_nginx_system_status.sh"
 
 usage() {
