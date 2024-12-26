@@ -190,8 +190,6 @@ check_status_service() {
 }
 
 main() {
-  ensure_root
-
   parse_arguments "$@"
 
   for cmd in "jq" "ec2-metadata"; do

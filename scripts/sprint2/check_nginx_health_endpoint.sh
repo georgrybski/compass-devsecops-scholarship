@@ -193,7 +193,6 @@ perform_health_check() {
 }
 
 main() {
-  ensure_root
 
   parse_arguments "$@"
 
