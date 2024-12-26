@@ -120,6 +120,9 @@ setup_cron_job() {
   info "Ensuring cron log directory: $CRON_LOG_DIR"
   mkdir -p "$CRON_LOG_DIR" || die "Failed to create log directory: $CRON_LOG_DIR"
 
+  touch "$CRON_LOG_FILE" || die "Failed to create log file: $CRON_LOG_FILE"
+  chmod 644 "$CRON_LOG_FILE" || die "Failed to set permissions on log file: $CRON_LOG_FILE"
+
   info "Setting ownership of log directory to $user"
   chown -R "$user:$user" "$CRON_LOG_DIR" || die "Failed to set ownership of $CRON_LOG_DIR to $user."
 
@@ -127,9 +130,6 @@ setup_cron_job() {
     info "Removing old log file: $CRON_LOG_FILE"
     rm -f "$CRON_LOG_FILE" || die "Failed to remove old log file: $CRON_LOG_FILE"
   }
-
-  touch "$CRON_LOG_FILE" || die "Failed to create log file: $CRON_LOG_FILE"
-  chmod 644 "$CRON_LOG_FILE" || die "Failed to set permissions on log file: $CRON_LOG_FILE"
 
   info "Updating cron jobs..."
   {
