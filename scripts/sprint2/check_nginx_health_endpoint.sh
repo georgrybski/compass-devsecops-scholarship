@@ -6,11 +6,11 @@ usage() {
 Usage: $0 [OPTIONS] <BASE_URL>
 
 Checks the /health endpoint of <BASE_URL> and appends JSON results to:
-  /var/log/nginx_health_endpoint/online.log   or
+  /var/log/nginx_health_endpoint/online.log
   /var/log/nginx_health_endpoint/offline.log
 
 Example:
-  $0 http://localhost
+  $0 http://12.34.56.78  # An external IP or domain
 
 Options:
   -v, --verbose  Show verbose internal command logs
@@ -70,14 +70,12 @@ detect_package_manager() {
 }
 
 map_package_name() {
-  local cmd="$1"
-  local pm="$2"
+  local cmd="$1" pm="$2"
 
   case "$pm" in
     apt)
       case "$cmd" in
         jq) echo "jq" ;;
-        ec2-metadata) echo "cloud-utils" ;;
         curl) echo "curl" ;;
         *) return 1 ;;
       esac
@@ -85,7 +83,6 @@ map_package_name() {
     dnf)
       case "$cmd" in
         jq) echo "jq" ;;
-        ec2-metadata) echo "ec2-metadata" ;;
         curl) echo "curl" ;;
         *) return 1 ;;
       esac
@@ -100,13 +97,14 @@ install_package() {
 
   verbose "Using $pm to install '$pkg'"
   case "$pm" in
-    apt) {
+    apt)
       try apt-get update -y
       try apt-get install -y "$pkg"
-    } ;;
-    dnf) try dnf install -y "$pkg" ;;
+      ;;
+    dnf)
+      try dnf install -y "$pkg"
+      ;;
   esac
-  return 0
 }
 
 ensure_command_available() {
@@ -125,55 +123,35 @@ ensure_command_available() {
 
   info "'$cmd' is not installed. Installing '$pkg'..."
 
-  install_package "$pkg" "$pm" &>/dev/null || return 1
+  install_package "$pkg" "$pm" || return 1
 
-  command -v "$cmd" &>/dev/null || return 1
+  command -v "$cmd" || return 1
 
   info "'$cmd' installation completed."
   return 0
 }
 
-get_aws_instance_metadata() {
-  local metadata
-  metadata=$(ec2-metadata -i -R 2>/dev/null || echo "")
-
-  INSTANCE_ID="localhost"
-  REGION="unknown"
-
-  while read -r line; do
-    case "$line" in
-      instance-id*) INSTANCE_ID=$(echo "$line" | awk '{print $2}') ;;
-      region*) REGION=$(echo "$line" | awk '{print $2}') ;;
-    esac
-  done <<< "$metadata"
-}
-
 log_json() {
-  local status="$1" message="$2" log_file
+  local status="$1" message="$2" log_file http_code_json
   log_file="$([[ "$status" == "online" ]] && echo "$ONLINE_LOG" || echo "$OFFLINE_LOG")"
-
-  [[ -z "$HTTP_CODE" ]] && http_code_json="null" || http_code_json="$HTTP_CODE"
+  [[ -z "${HTTP_CODE:-}" ]] && http_code_json="null" || http_code_json="$HTTP_CODE"
 
   jq -nc \
     --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-    --arg svc "nginx" \
     --arg st "$status" \
     --arg msg "$message" \
-    --arg iid "$INSTANCE_ID" \
-    --arg rgn "$REGION" \
+    --arg turl "$BASE_URL" \
     --argjson hc "$http_code_json" \
     '{
       timestamp: $ts,
-      service: $svc,
       status: $st,
       message: $msg,
       http_code: $hc,
-      instance_id: $iid,
-      region: $rgn
+      target_url: $turl
     }' \
-     | tee -a "$log_file" \
-     | verbose \
-     || die "Could not log JSON with jq and tee"
+    | tee -a "$log_file" \
+    | verbose \
+    || die "Could not log JSON with jq and tee"
 }
 
 perform_health_check() {
@@ -182,32 +160,33 @@ perform_health_check() {
   HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" "$address")" || curl_exit_code=$?
 
   [[ $curl_exit_code -ne 0 ]] && {
-    status="unknown" message="Curl failed with exit code $curl_exit_code while accessing $address."
+    status="unknown"
+    message="Curl failed with exit code $curl_exit_code while accessing $address."
     log_json "$status" "$message"
     return 0
   }
 
-  [[ -z "$HTTP_CODE" ]] && {
-    status="offline" message="Curl succeeded but no HTTP code was captured. This is unexpected."
+  # If curl exit code = 0 but no status is recorded, that's odd
+  [[ -z "${HTTP_CODE:-}" ]] && {
+    status="offline"
+    message="Curl succeeded but no HTTP code was captured. This is unexpected."
     log_json "$status" "$message"
     return 0
   }
 
-  status="online" message="Nginx health endpoint returned code $HTTP_CODE."
+  status="online"
+  message="Nginx health endpoint returned code $HTTP_CODE."
   log_json "$status" "$message"
   return 0
 }
 
 main() {
   ensure_sudo
-
   parse_arguments "$@"
 
-  for cmd in "jq" "ec2-metadata" "curl"; do
+  for cmd in jq curl; do
     ensure_command_available "$cmd" || die "Essential command '$cmd' could not be installed."
   done
-
-  get_aws_instance_metadata
 
   LOG_DIR="/var/log/nginx_health_endpoint"
   ONLINE_LOG="$LOG_DIR/online.log"

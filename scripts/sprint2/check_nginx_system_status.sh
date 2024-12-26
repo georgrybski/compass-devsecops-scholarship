@@ -61,8 +61,7 @@ detect_package_manager() {
 }
 
 map_package_name() {
-  local cmd="$1"
-  local pm="$2"
+  local cmd="$1" pm="$2"
 
   case "$pm" in
     apt)
@@ -198,7 +197,6 @@ check_nginx_status() {
 
 main() {
   ensure_sudo
-
   parse_arguments "$@"
 
   for cmd in "jq" "ec2-metadata"; do
