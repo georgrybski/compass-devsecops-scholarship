@@ -28,6 +28,26 @@ try() { "$@" || die "Command failed: $*"; }
 
 ensure_sudo() { sudo -n true 2>/dev/null || die "Script requires sudo privileges."; }
 
+parse_arguments() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --address){
+        shift
+        [[ $# -gt 0 ]] || die "Missing value for --address"
+        ADDRESS="$1"
+      };;
+      --user){
+        shift
+        [[ $# -gt 0 ]] || die "Missing value for --user"
+        TARGET_USER="$1"
+      };;
+      -h|--help) usage ;;
+      *) die "Unknown argument: $1" ;;
+    esac
+    shift
+  done
+}
+
 detect_package_manager() {
   for pm in apt dnf; do
     command -v "$pm" &>/dev/null || continue
@@ -95,27 +115,30 @@ ensure_command_available() {
 }
 
 setup_cron_job() {
-  local cron_job="$CRON_JOB_SCHEDULE sudo $LOCAL_SCRIPT_PATH -v $ADDRESS >> $CRON_LOG_FILE 2>&1"
+  local cron_job="$CRON_JOB_SCHEDULE sudo $LOCAL_SCRIPT_PATH --address $ADDRESS >> $CRON_LOG_FILE 2>&1"
+  local user="${TARGET_USER:-ec2-user}"
 
   info "Ensuring cron log directory: $CRON_LOG_DIR"
-  mkdir -p "$CRON_LOG_DIR" || die "Failed to create log directory: $CRON_LOG_DIR"
+  sudo mkdir -p "$CRON_LOG_DIR" || die "Failed to create log directory: $CRON_LOG_DIR"
 
-  [[ -f "$CRON_LOG_FILE" ]] && {
+  if [[ -f "$CRON_LOG_FILE" ]]; then
     info "Removing old log file: $CRON_LOG_FILE"
-    rm -f "$CRON_LOG_FILE" || die "Failed to remove old log file: $CRON_LOG_FILE"
-  }
+    sudo rm -f "$CRON_LOG_FILE" || die "Failed to remove old log file: $CRON_LOG_FILE"
+  else
+    info "No existing log file to remove."
+  fi
 
-  touch "$CRON_LOG_FILE" || die "Failed to create log file: $CRON_LOG_FILE"
-  chmod 644 "$CRON_LOG_FILE" || die "Failed to set permissions on log file: $CRON_LOG_FILE"
+  sudo touch "$CRON_LOG_FILE" || die "Failed to create log file: $CRON_LOG_FILE"
+  sudo chmod 644 "$CRON_LOG_FILE" || die "Failed to set permissions on log file: $CRON_LOG_FILE"
 
-  info "Updating cron jobs..."
+  info "Updating cron jobs for user: $user..."
   {
-    crontab -l 2>/dev/null | grep -v "$LOCAL_SCRIPT_PATH"
+    sudo crontab -u "$user" -l 2>/dev/null | grep -v "$LOCAL_SCRIPT_PATH" || true
     echo "$cron_job"
-  } | crontab - || die "Failed to update cron jobs."
+  } | sudo crontab -u "$user" - || die "Failed to update cron jobs for user: $user."
 
-  info "Cron job successfully added:"
-  crontab -l | grep "$LOCAL_SCRIPT_PATH"
+  info "Cron job successfully added for user: $user"
+  sudo crontab -u "$user" -l | grep "$LOCAL_SCRIPT_PATH"
 }
 
 download_script() {
@@ -130,19 +153,7 @@ download_script() {
 
 main() {
   ensure_sudo
-
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      --address) {
-        shift
-        [[ $# -gt 0 ]] || die "Missing value for --address"
-        ADDRESS="$1"
-      } ;;
-      -h|--help) usage ;;
-      *) die "Unknown argument: $1" ;;
-    esac
-    shift
-  done
+  parse_arguments "$@"
 
   info "Using address: $ADDRESS"
 
