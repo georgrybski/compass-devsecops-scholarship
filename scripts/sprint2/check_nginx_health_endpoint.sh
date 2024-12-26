@@ -156,7 +156,7 @@ log_json() {
 
   jq -nc \
     --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-    --arg svc "nginx_health_endpoint" \
+    --arg svc "nginx" \
     --arg st "$status" \
     --arg msg "$message" \
     --arg iid "$INSTANCE_ID" \
