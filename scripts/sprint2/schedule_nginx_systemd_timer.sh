@@ -58,7 +58,7 @@ Description=Check Nginx System Status
 After=network.target
 
 [Service]
-ExecStart=sudo $SCRIPT_PATH
+ExecStart=$SCRIPT_PATH
 StandardOutput=journal
 StandardError=journal
 User=root
