@@ -146,6 +146,11 @@ server {
     location /portfolio {
         return 301 ${REDIRECT_TARGET};
     }
+
+    location /health {
+        access_log off;
+        return 200 "OK";
+    }
 }
 EOF
 
