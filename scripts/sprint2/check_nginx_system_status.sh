@@ -49,7 +49,12 @@ parse_arguments() {
   done
 }
 
-ensure_sudo() { sudo -n true 2>/dev/null || die "sudo privileges are required to run this script."; }
+ensure_sudo() {
+  echo "Running ensure_sudo..."
+  sudo -n true 2>/dev/null && { echo "Sudo privileges are active."; return 0; }
+  echo "No active sudo session. Exiting..."
+  die "sudo privileges are required to run this script."
+}
 
 detect_package_manager() {
   for pm in apt dnf; do
