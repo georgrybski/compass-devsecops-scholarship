@@ -27,9 +27,14 @@ RESET="\033[0m"
 info()    { echo -e "${GREEN}[INFO]${RESET} $*"; }
 error()   { echo -e "${RED}[ERROR]${RESET} $*" >&2; }
 verbose() {
-  [[ "$VERBOSE" == true ]] && while IFS= read -r line; do
-    echo -e "${BLUE}[VERBOSE]${RESET} $line"
-  done
+  [[ "$VERBOSE" != true ]] && return 0
+  if [[ -p /dev/stdin ]]; then
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      echo -e "${BLUE}[VERBOSE]${RESET} $line"
+    done
+  elif [[ -n "$*" ]]; then
+    echo -e "${BLUE}[VERBOSE]${RESET} $*"
+  fi
 }
 
 yell() { error "$0: $*" >&2; }
