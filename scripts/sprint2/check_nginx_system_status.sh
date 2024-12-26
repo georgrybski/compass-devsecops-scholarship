@@ -90,10 +90,10 @@ install_package() {
   verbose "Using $pm to install '$pkg'"
   case "$pm" in
     apt) {
-      try apt-get update -y
-      try apt-get install -y "$pkg"
+      try sudo apt-get update -y
+      try sudo apt-get install -y "$pkg"
     } ;;
-    dnf) try dnf install -y "$pkg" ;;
+    dnf) try sudo dnf install -y "$pkg" ;;
   esac
   return 0
 }
@@ -141,7 +141,7 @@ log_json() {
   local status="$1" message="$2" log_file
   log_file="$([[ "$status" == "online" ]] && echo "$ONLINE_LOG" || echo "$OFFLINE_LOG")"
 
-  jq -nc \
+  sudo jq -nc \
     --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
     --arg svc "nginx" \
     --arg st "$status" \
@@ -205,9 +205,9 @@ main() {
   OFFLINE_LOG="$LOG_DIR/offline.log"
 
   info "Ensuring log directory: $LOG_DIR"
-  try mkdir -p "$LOG_DIR"
-  try touch "$ONLINE_LOG" "$OFFLINE_LOG"
-  try chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
+  try sudo mkdir -p "$LOG_DIR"
+  try sudo touch "$ONLINE_LOG" "$OFFLINE_LOG"
+  try sudo chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
 
   verbose "Checking Nginx status..."
 
