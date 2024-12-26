@@ -58,7 +58,7 @@ parse_arguments() {
   BASE_URL="$1"
 }
 
-ensure_root() { [[ "$EUID" -ne 0 ]] && die "This script must be ran as root"; }
+ensure_sudo() { sudo -n true 2>/dev/null || sudo -v || die "sudo privileges are required to run this script."; }
 
 detect_package_manager() {
   for pm in apt dnf; do
@@ -183,7 +183,7 @@ perform_health_check() {
   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$address" || echo "")
   local status="offline" message="Nginx health endpoint did not return a valid HTTP code."
 
-  [[ -z "$HTTP_CODE" ]] && {
+  [[ -n "$HTTP_CODE" ]] && {
     message="Nginx health endpoint returned code $HTTP_CODE."
     status="online"
   }
@@ -193,6 +193,7 @@ perform_health_check() {
 }
 
 main() {
+  ensure_sudo
 
   parse_arguments "$@"
 

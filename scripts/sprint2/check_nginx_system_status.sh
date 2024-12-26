@@ -49,7 +49,7 @@ parse_arguments() {
   done
 }
 
-ensure_root() { [[ "$EUID" -ne 0 ]] && die "This script must be ran as root"; }
+ensure_sudo() { sudo -n true 2>/dev/null || sudo -v || die "sudo privileges are required to run this script."; }
 
 detect_package_manager() {
   for pm in apt dnf; do
@@ -114,9 +114,9 @@ ensure_command_available() {
 
   info "'$cmd' is not installed. Installing '$pkg'..."
 
-  install_package "$pkg" "$pm" &>/dev/null || return 1
+  install_package "$pkg" "$pm" || return 1
 
-  command -v "$cmd" &>/dev/null || return 1
+  command -v "$cmd" || return 1
 
   info "'$cmd' installation completed."
   return 0
@@ -189,7 +189,15 @@ check_status_service() {
   return 0
 }
 
+check_nginx_status() {
+    command -v systemctl &>/dev/null && check_status_systemctl && return 0
+    command -v service &>/dev/null && check_status_service && return 0
+    die "Neither 'systemctl' nor 'service' command is available."
+}
+
 main() {
+  ensure_sudo
+
   parse_arguments "$@"
 
   for cmd in "jq" "ec2-metadata"; do
@@ -208,14 +216,7 @@ main() {
   try chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
 
   verbose "Checking Nginx status..."
-
-  if command -v systemctl &>/dev/null; then
-    check_status_systemctl
-  elif command -v service &>/dev/null; then
-    check_status_service
-  else
-    die "Neither 'systemctl' nor 'service' command is available."
-  fi
+  check_nginx_status
 }
 
 main "$@"
