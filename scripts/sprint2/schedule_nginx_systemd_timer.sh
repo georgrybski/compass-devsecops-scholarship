@@ -91,6 +91,7 @@ reload_systemd() {
 enable_and_start_timer() {
   info "Enabling and starting the timer: $SERVICE_NAME.timer"
   systemctl enable --now "${SERVICE_NAME}.timer"
+  systemctl restart "${SERVICE_NAME}.service"
 }
 
 verify_timer() {
