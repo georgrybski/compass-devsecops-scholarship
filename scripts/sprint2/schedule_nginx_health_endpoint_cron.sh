@@ -95,27 +95,27 @@ ensure_command_available() {
 }
 
 setup_cron_job() {
-  local cron_job="$CRON_JOB_SCHEDULE sudo $LOCAL_SCRIPT_PATH --address $ADDRESS >> $CRON_LOG_FILE 2>&1"
+  local cron_job="$CRON_JOB_SCHEDULE sudo $LOCAL_SCRIPT_PATH -v $ADDRESS >> $CRON_LOG_FILE 2>&1"
 
   info "Ensuring cron log directory: $CRON_LOG_DIR"
-  sudo mkdir -p "$CRON_LOG_DIR" || die "Failed to create log directory: $CRON_LOG_DIR"
+  mkdir -p "$CRON_LOG_DIR" || die "Failed to create log directory: $CRON_LOG_DIR"
 
   [[ -f "$CRON_LOG_FILE" ]] && {
     info "Removing old log file: $CRON_LOG_FILE"
-    sudo rm -f "$CRON_LOG_FILE" || die "Failed to remove old log file: $CRON_LOG_FILE"
+    rm -f "$CRON_LOG_FILE" || die "Failed to remove old log file: $CRON_LOG_FILE"
   }
 
-  sudo touch "$CRON_LOG_FILE" || die "Failed to create log file: $CRON_LOG_FILE"
-  sudo chmod 644 "$CRON_LOG_FILE" || die "Failed to set permissions on log file: $CRON_LOG_FILE"
+  touch "$CRON_LOG_FILE" || die "Failed to create log file: $CRON_LOG_FILE"
+  chmod 644 "$CRON_LOG_FILE" || die "Failed to set permissions on log file: $CRON_LOG_FILE"
 
   info "Updating cron jobs..."
   {
     crontab -l 2>/dev/null | grep -v "$LOCAL_SCRIPT_PATH"
     echo "$cron_job"
-  } | sudo crontab - || die "Failed to update cron jobs."
+  } | crontab - || die "Failed to update cron jobs."
 
   info "Cron job successfully added:"
-  sudo crontab -l | grep "$LOCAL_SCRIPT_PATH"
+  crontab -l | grep "$LOCAL_SCRIPT_PATH"
 }
 
 download_script() {
