@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# =================================
-# Nginx System Status Checker
-# =================================
+usage() {
+  cat <<EOF
+Usage: $0 [OPTIONS]
+
+Checks the Nginx service status and appends JSON log entries to:
+  /var/log/nginx_status/online.log   or
+  /var/log/nginx_status/offline.log
+
+Options:
+  -v, --verbose  Show verbose internal command logs
+  -h, --help     Show this help message
+EOF
+  exit 1
+}
 
 GREEN="\033[0;32m"
 RED="\033[0;31m"
@@ -20,44 +31,25 @@ verbose() {
 
 yell() { error "$0: $*" >&2; }
 die() {
-  local exit_code=${2:-111}
+  local exit_code=${2:-1}
   yell "$1"
   exit "$exit_code"
 }
 try() { "$@" || die "cannot $*"; }
 
-usage() {
-  cat <<EOF
-Usage: $0 [OPTIONS]
-
-Checks the Nginx service status and appends JSON log entries to:
-  /var/log/nginx_status/online.log   or
-  /var/log/nginx_status/offline.log
-
-Options:
-  -v, --verbose  Show verbose internal command logs
-  -h, --help     Show this help message
-EOF
-  exit 1
-}
-
 parse_arguments() {
   VERBOSE=false
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -v|--verbose)
-        VERBOSE=true
-        ;;
-      -h|--help)
-        usage
-        ;;
-      *)
-        die "Unknown option: $1"
-        ;;
+      -v|--verbose) VERBOSE=true ;;
+      -h|--help) usage ;;
+      *) die "Unknown option: $1" ;;
     esac
     shift
   done
 }
+
+ensure_root() { [[ "$EUID" -ne 0 ]] && die "This script must be ran as root"; }
 
 detect_package_manager() {
   for pm in apt dnf; do
@@ -75,38 +67,33 @@ map_package_name() {
   case "$pm" in
     apt)
       case "$cmd" in
-        jq)            echo "jq" ;;
-        ec2-metadata)  echo "cloud-utils" ;;
+        jq) echo "jq" ;;
+        ec2-metadata) echo "cloud-utils" ;;
         *) return 1 ;;
       esac
-      ;;
+       ;;
     dnf)
       case "$cmd" in
-        jq)            echo "jq" ;;
-        ec2-metadata)  echo "ec2-utils" ;;
+        jq) echo "jq" ;;
+        ec2-metadata) echo "ec2-utils" ;;
         *) return 1 ;;
       esac
-      ;;
-    *)
-      return 1
-      ;;
+       ;;
+    *) return 1 ;;
   esac
   return 0
 }
 
 install_package() {
-  local pkg="$1"
-  local pm="$2"
+  local pkg="$1" pm="$2"
 
   verbose "Using $pm to install '$pkg'"
   case "$pm" in
-    apt)
-      try sudo apt-get update -y
-      try sudo apt-get install -y "$pkg"
-      ;;
-    dnf)
-      try sudo dnf install -y "$pkg"
-      ;;
+    apt) {
+      try apt-get update -y
+      try apt-get install -y "$pkg"
+    } ;;
+    dnf) try dnf install -y "$pkg" ;;
   esac
   return 0
 }
@@ -144,20 +131,14 @@ get_aws_instance_metadata() {
 
   while read -r line; do
     case "$line" in
-      instance-id*)
-        INSTANCE_ID=$(echo "$line" | awk '{print $2}')
-        ;;
-      region*)
-        REGION=$(echo "$line" | awk '{print $2}')
-        ;;
+      instance-id*) INSTANCE_ID=$(echo "$line" | awk '{print $2}') ;;
+      region*) REGION=$(echo "$line" | awk '{print $2}') ;;
     esac
   done <<< "$metadata"
 }
 
 log_json() {
-  local status="$1"
-  local message="$2"
-  local log_file
+  local status="$1" message="$2" log_file
   log_file="$([[ "$status" == "online" ]] && echo "$ONLINE_LOG" || echo "$OFFLINE_LOG")"
 
   jq -nc \
@@ -175,7 +156,7 @@ log_json() {
       instance_id: $iid,
       region: $rgn
     }' \
-     | sudo tee -a "$log_file" \
+     | tee -a "$log_file" \
      | verbose \
      || die "Could not log JSON with jq and tee"
 }
@@ -209,6 +190,8 @@ check_status_service() {
 }
 
 main() {
+  ensure_root
+
   parse_arguments "$@"
 
   for cmd in "jq" "ec2-metadata"; do
@@ -222,9 +205,9 @@ main() {
   OFFLINE_LOG="$LOG_DIR/offline.log"
 
   info "Ensuring log directory: $LOG_DIR"
-  try sudo mkdir -p "$LOG_DIR"
-  try sudo touch "$ONLINE_LOG" "$OFFLINE_LOG"
-  try sudo chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
+  try mkdir -p "$LOG_DIR"
+  try touch "$ONLINE_LOG" "$OFFLINE_LOG"
+  try chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
 
   verbose "Checking Nginx status..."
 

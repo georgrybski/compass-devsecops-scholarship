@@ -1,36 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ===================================
-# Nginx Health Endpoint Checker
-# ===================================
-# Checks if a given URL's /health endpoint returns HTTP 200.
-# Logs JSON results to:
-#   /var/log/nginx_health_endpoint/online.log   (if 200)
-#   /var/log/nginx_health_endpoint/offline.log  (otherwise)
-
-GREEN="\033[0;32m"
-RED="\033[0;31m"
-BLUE="\033[0;34m"
-RESET="\033[0m"
-
-info()    { echo -e "${GREEN}[INFO]${RESET} $*"; }
-error()   { echo -e "${RED}[ERROR]${RESET} $*" >&2; }
-verbose() {
-  [[ "$VERBOSE" == true ]] && while IFS= read -r line; do
-    echo -e "${BLUE}[VERBOSE]${RESET} $line"
-  done
-}
-
-yell() { error "$0: $*" >&2; }
-die() {
-  local exit_code=${2:-111}
-  yell "$1"
-  exit "$exit_code"
-}
-try() { "$@" || die "cannot $*"; }
-
-
 usage() {
   cat <<EOF
 Usage: $0 [OPTIONS] <BASE_URL>
@@ -49,32 +19,46 @@ EOF
   exit 1
 }
 
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+BLUE="\033[0;34m"
+RESET="\033[0m"
+
+info()    { echo -e "${GREEN}[INFO]${RESET} $*"; }
+error()   { echo -e "${RED}[ERROR]${RESET} $*" >&2; }
+verbose() {
+  [[ "$VERBOSE" == true ]] && while IFS= read -r line; do
+    echo -e "${BLUE}[VERBOSE]${RESET} $line"
+  done
+}
+
+yell() { error "$0: $*" >&2; }
+die() {
+  local exit_code=${2:-1}
+  yell "$1"
+  exit "$exit_code"
+}
+try() { "$@" || die "cannot $*"; }
+
 parse_arguments() {
   VERBOSE=false
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -v|--verbose)
-        VERBOSE=true
-        ;;
-      -h|--help)
-        usage
-        ;;
-      -*)
-        die "Unknown option: $1"
-        ;;
-      *)
-        if [[ -z "$BASE_URL" ]]; then
-          BASE_URL="$1"
-        else
-          die "Multiple BASE_URLs provided."
-        fi
-        ;;
+      -v|--verbose) VERBOSE=true ;;
+      -h|--help) usage ;;
+      -*) die "Unknown option: $1" ;;
+      *) break ;;
     esac
     shift
   done
 
-  [[ -z "$BASE_URL" ]] && die "BASE_URL is required."
+  [[ $# -eq 0 ]] && die "BASE_URL is required."
+  [[ $# -gt 1 ]] && die "Multiple BASE_URLs provided."
+
+  BASE_URL="$1"
 }
+
+ensure_root() { [[ "$EUID" -ne 0 ]] && die "This script must be ran as root"; }
 
 detect_package_manager() {
   for pm in apt dnf; do
@@ -92,40 +76,35 @@ map_package_name() {
   case "$pm" in
     apt)
       case "$cmd" in
-        jq)            echo "jq" ;;
-        ec2-metadata)  echo "cloud-utils" ;;
-        curl)          echo "curl" ;;
+        jq) echo "jq" ;;
+        ec2-metadata) echo "cloud-utils" ;;
+        curl) echo "curl" ;;
         *) return 1 ;;
       esac
       ;;
     dnf)
       case "$cmd" in
-        jq)            echo "jq" ;;
-        ec2-metadata)  echo "ec2-utils" ;;
-        curl)          echo "curl" ;;
+        jq) echo "jq" ;;
+        ec2-metadata) echo "ec2-utils" ;;
+        curl) echo "curl" ;;
         *) return 1 ;;
       esac
       ;;
-    *)
-      return 1
-      ;;
+    *) return 1 ;;
   esac
   return 0
 }
 
 install_package() {
-  local pkg="$1"
-  local pm="$2"
+  local pkg="$1" pm="$2"
 
   verbose "Using $pm to install '$pkg'"
   case "$pm" in
-    apt)
-      try sudo apt-get update -y
-      try sudo apt-get install -y "$pkg"
-      ;;
-    dnf)
-      try sudo dnf install -y "$pkg"
-      ;;
+    apt) {
+      try apt-get update -y
+      try apt-get install -y "$pkg"
+    } ;;
+    dnf) try dnf install -y "$pkg" ;;
   esac
   return 0
 }
@@ -163,20 +142,14 @@ get_aws_instance_metadata() {
 
   while read -r line; do
     case "$line" in
-      instance-id*)
-        INSTANCE_ID=$(echo "$line" | awk '{print $2}')
-        ;;
-      region*)
-        REGION=$(echo "$line" | awk '{print $2}')
-        ;;
+      instance-id*) INSTANCE_ID=$(echo "$line" | awk '{print $2}') ;;
+      region*) REGION=$(echo "$line" | awk '{print $2}') ;;
     esac
   done <<< "$metadata"
 }
 
 log_json() {
-  local status="$1"
-  local message="$2"
-  local log_file
+  local status="$1" message="$2" log_file
   log_file="$([[ "$status" == "online" ]] && echo "$ONLINE_LOG" || echo "$OFFLINE_LOG")"
 
   [[ -z "$HTTP_CODE" ]] && http_code_json="null" || http_code_json="$HTTP_CODE"
@@ -198,7 +171,7 @@ log_json() {
       instance_id: $iid,
       region: $rgn
     }' \
-     | sudo tee -a "$log_file" \
+     | tee -a "$log_file" \
      | verbose \
      || die "Could not log JSON with jq and tee"
 }
@@ -220,6 +193,8 @@ perform_health_check() {
 }
 
 main() {
+  ensure_root
+
   parse_arguments "$@"
 
   for cmd in "jq" "ec2-metadata" "curl"; do
@@ -233,9 +208,9 @@ main() {
   OFFLINE_LOG="$LOG_DIR/offline.log"
 
   info "Ensuring log directory: $LOG_DIR"
-  try sudo mkdir -p "$LOG_DIR"
-  try sudo touch "$ONLINE_LOG" "$OFFLINE_LOG"
-  try sudo chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
+  try mkdir -p "$LOG_DIR"
+  try touch "$ONLINE_LOG" "$OFFLINE_LOG"
+  try chmod 666 "$ONLINE_LOG" "$OFFLINE_LOG"
 
   perform_health_check "$BASE_URL"
 }
