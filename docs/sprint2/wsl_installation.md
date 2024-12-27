@@ -3,7 +3,7 @@
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Installation Steps](#installation-steps)
-  - [Quick Setup Video](#quick-setup-video-click-to-watch)
+  - [Quick Setup Video](#quick-setup-video)
   - [1. Enable WSL](#1-enable-wsl)
   - [2. Install Ubuntu LTS](#2-install-ubuntu-lts)
   - [3. Initialize the Distribution](#3-initialize-the-distribution)
@@ -26,8 +26,11 @@
 
 ## Installation Steps
 
-### Quick Setup Video ([Click to watch](https://youtu.be/PmBIG8HSWPQ))
-[![Watch the WSL Ubuntu Setup](https://img.youtube.com/vi/PmBIG8HSWPQ/0.jpg)](https://youtu.be/PmBIG8HSWPQ)
+### Quick Setup Video
+
+https://github.com/user-attachments/assets/9db5b269-ec27-4438-b876-e0690abbb9c5
+
+#### [Or click here to watch on YouTube](https://youtu.be/PmBIG8HSWPQ)
 
 ### 1. Enable WSL
 
