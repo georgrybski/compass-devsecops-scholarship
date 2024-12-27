@@ -4,9 +4,9 @@
 [![Leia em Português](https://img.shields.io/badge/%F0%9F%87%A7%F0%9F%87%B7%20Portugu%C3%AAs-F0FFFF.svg)](README.pt-BR.md)
 [![Leia em Inglês](https://img.shields.io/badge/%F0%9F%87%BA%F0%9F%87%B8%20English-gray.svg)](README.md)
 
-## Bolsa de Estudos Compass UOL DevSecOps
+## Programa Bolsas DevSecOps Compass UOL
 
-Este repositório contém as atividades concluídas por [mim](https://github.com/georgrybski) sob uma bolsa de estudos DevSecOps/AWS fornecida pela [Compass UOL](https://compass.uol/en/home/) em parceria com o [Centro Universitário UNINTER](https://www.uninter.com/centro-universitario/).
+Este repositório contém as atividades concluídas por [mim](https://github.com/georgrybski) do programa de bolas DevSecOps/AWS da [Compass UOL](https://compass.uol/en/home/) em parceria com o [Centro Universitário UNINTER](https://www.uninter.com/centro-universitario/).
 
 ---
 
