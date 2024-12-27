@@ -45,14 +45,22 @@ repository-root/
 ├── docs/
 │   ├── general/
 │   │   ├── cron_vs_systemd_timers.md
-│   │   └── virtualizing_windows_on_kvm.md (TODO)
+│   │   ├── cron_vs_systemd_timers.pt-BR.md
+│   │   ├── structured_logging.md
+│   │   └── structured_logging.pt-BR.md
 │   └── sprint2/
 │       ├── README.md
+│       ├── README.pt-BR.md
 │       ├── check_nginx_health_endpoint.md
+│       ├── check_nginx_health_endpoint.pt-BR.md
 │       ├── check_nginx_system_status.md
+│       ├── check_nginx_system_status.pt-BR.md
 │       ├── schedule_nginx_health_endpoint_cron.md
+│       ├── schedule_nginx_health_endpoint_cron.pt-BR.md
 │       ├── schedule_nginx_systemd_timer.md
-│       └── wsl_installation.md
+│       ├── schedule_nginx_systemd_timer.pt-BR.md
+│       ├── wsl_installation.md
+│       └── wsl_installation.pt-BR.md
 ├── scripts/
 │   └── sprint2/
 │       ├── check_nginx_health_endpoint.sh
@@ -61,6 +69,7 @@ repository-root/
 │       ├── schedule_nginx_health_endpoint_cron.sh
 │       └── schedule_nginx_systemd_timer.sh
 ├── .gitignore
+├── README.pt-BR.md
 └── README.md
 ```
 

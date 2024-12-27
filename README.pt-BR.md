@@ -40,18 +40,26 @@ Você pode ver o progresso das tarefas deste projeto [aqui](https://github.com/u
 repository-root/
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
-│   │   └── user_story.pt-BR.md
+│   │   └── user_story.md
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
 │   ├── general/
+│   │   ├── cron_vs_systemd_timers.md
 │   │   ├── cron_vs_systemd_timers.pt-BR.md
-│   │   └── virtualizing_windows_on_kvm.pt-BR.md (TODO)
+│   │   ├── structured_logging.md
+│   │   └── structured_logging.pt-BR.md
 │   └── sprint2/
+│       ├── README.md
 │       ├── README.pt-BR.md
+│       ├── check_nginx_health_endpoint.md
 │       ├── check_nginx_health_endpoint.pt-BR.md
+│       ├── check_nginx_system_status.md
 │       ├── check_nginx_system_status.pt-BR.md
+│       ├── schedule_nginx_health_endpoint_cron.md
 │       ├── schedule_nginx_health_endpoint_cron.pt-BR.md
+│       ├── schedule_nginx_systemd_timer.md
 │       ├── schedule_nginx_systemd_timer.pt-BR.md
+│       ├── wsl_installation.md
 │       └── wsl_installation.pt-BR.md
 ├── scripts/
 │   └── sprint2/
@@ -61,6 +69,7 @@ repository-root/
 │       ├── schedule_nginx_health_endpoint_cron.sh
 │       └── schedule_nginx_systemd_timer.sh
 ├── .gitignore
+├── README.pt-BR.md
 └── README.md
 ```
 ---
