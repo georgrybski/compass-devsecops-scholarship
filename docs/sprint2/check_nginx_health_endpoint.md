@@ -9,6 +9,10 @@ The `check_nginx_health_endpoint.sh` script checks the `/health` endpoint of the
 - **Customization:** Includes timestamps, target URLs, HTTP codes, and personalized messages.
 - **Dependency Management:** Ensures required dependencies (`jq` and `curl`) are installed.
 
+## Script in action
+
+https://github.com/user-attachments/assets/4a6377dc-bdff-493b-b1e8-ed50f3d02432
+
 ## How to Run
 
 You can quickly download and execute the `check_nginx_health_endpoint.sh` script using either `wget` or `curl`. This eliminates the need to manually download the script and make it executable.
