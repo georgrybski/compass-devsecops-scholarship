@@ -49,7 +49,7 @@ repository-root/
 │       ├── check_nginx_system_status.md
 │       ├── schedule_nginx_health_endpoint_cron.md
 │       ├── schedule_nginx_systemd_timer.md
-│       └──  wsl_installation.md
+│       └── wsl_installation.md
 ├── scripts/
 │   └── sprint2/
 │       ├── check_nginx_health_endpoint.sh
