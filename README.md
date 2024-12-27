@@ -8,7 +8,7 @@ This repo contains the activities done by [me](https://github.com/georgrybski) u
 
 ### Table of Contents
 - [Project Status](#project-status)
-- [Sprint Projects and Documentation](#sprint-projects-and-documentation)
+- [Sprint Projects and Documentation](#sprint-projects-scripts-and-documentation)
 - [Repository Structure Overview](#repository-structure-overview)
     - [Sprint 2](#sprint-2)
 - [License](#license)
@@ -21,7 +21,7 @@ Also, each PR is associated to a respective issue, and reviewed by [Qodo Merge](
 
 You can view this project's tasks' progress [here](https://github.com/users/georgrybski/projects/3).
 
-### Sprint Projects and Documentation
+### Sprint Projects, Scripts and Documentation
 - #### [Sprint 2](docs/sprints/sprint2/README.md)
 
 ### Repository Structure Overview
