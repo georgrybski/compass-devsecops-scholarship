@@ -10,6 +10,10 @@ The `schedule_nginx_health_endpoint_cron.sh` script automates the scheduling of 
 
 You can read about `check_nginx_health_endpoint.sh` [here](check_nginx_health_endpoint.md).
 
+## Script in Action
+
+https://github.com/user-attachments/assets/ef4148bf-5bcb-4120-a45d-66ddba51aa58
+
 ## How to Run
 
 You can quickly download and execute the `schedule_nginx_health_endpoint_cron.sh` script using either `wget` or `curl`. This eliminates the need to manually download the script and make it executable.
