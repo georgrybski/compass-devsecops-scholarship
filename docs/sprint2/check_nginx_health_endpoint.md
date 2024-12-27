@@ -16,15 +16,15 @@ You can quickly download and execute the `check_nginx_health_endpoint.sh` script
 #### Using wget:
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_health_endpoint.sh \
- | sudo bash -s -- http://localhost
+  wget -qO- https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_health_endpoint.sh \
+  | sudo bash -s -- http://localhost
 ```
 
 #### Using curl:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_health_endpoint.sh \
- | sudo bash -s -- http://localhost
+  curl -sL https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_health_endpoint.sh \
+  | sudo bash -s -- http://localhost
 ```
 
 #### Explanation of the Command
@@ -35,7 +35,11 @@ curl -sL https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholar
 
 - ```| sudo bash -s -- http://localhost```:
   - This pipes the script output into `bash`, allowing the script to run with `sudo` privileges.
-  - The `\` character at the end of the first line is used to break the command into multiple lines for better readability. It tells the shell that the command continues on the next line.
+  - The `--` signals the end of command options for bash. Any arguments following it will be passed to the script itself, rather than being interpreted as options for `bash`
+  - `http://localhost` is the address that will be checked.
+
+- `\`:
+  - This is used to break the command into multiple lines for better readability. It tells the shell that the command continues on the next line.
 
 ### Prerequisites
 

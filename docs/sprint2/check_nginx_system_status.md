@@ -16,15 +16,15 @@ You can quickly download and execute the `check_nginx_system_status.sh` script u
 #### Using wget:
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_system_status.sh \
- | sudo bash -s --
+    wget -qO- https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_system_status.sh \
+    | sudo bash -s -- -v
 ```
 
 #### Using curl:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_system_status.sh \
- | sudo bash -s --
+  curl -sL https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_system_status.sh \
+  | sudo bash -s -- -v
 ```
 
 #### Explanation of the Command
@@ -35,7 +35,13 @@ curl -sL https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholar
 
 - ```| sudo bash -s --```:
   - This pipes the script output into `bash`, allowing the script to run with `sudo` privileges.
-  - The `\` character at the end of the first line is used to break the command into multiple lines for better readability. It tells the shell that the command continues on the next line.
+  - The `--` signals the end of command options for bash. Any arguments following it will be passed to the script itself, rather than being interpreted as options for `bash`
+
+- `-v`:
+  - This is a verbose flag passed to the script. When used, it enables detailed output, providing more information about what the script is doing.
+
+- `\`:
+  - This is used to break the command into multiple lines for better readability. It tells the shell that the command continues on the next line.
 
 ### Prerequisites
 
