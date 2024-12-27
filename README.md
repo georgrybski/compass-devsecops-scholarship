@@ -4,28 +4,30 @@
 
 ## Compass UOL DevSecOps Scholarship
 
-This repo contains the activities done by [me](https://github.com/georgrybski) under a DevSecOps/AWS scholarship by [Compass UOL](https://compass.uol/en/home/) in partnership with [UNINTER International University Center](https://www.uninter.com/centro-universitario/)
+This repository contains the activities completed by [me](https://github.com/georgrybski) under a DevSecOps/AWS scholarship provided by [Compass UOL](https://compass.uol/en/home/) in partnership with [UNINTER International University Center](https://www.uninter.com/centro-universitario/).
 
 ---
 
 ### Table of Contents
 - [Project Status](#project-status)
-- [Sprint Projects and Documentation](#sprint-projects-scripts-and-documentation)
+- [Sprint Projects, Scripts, and Documentation](#sprint-projects-scripts-and-documentation)
 - [Repository Structure Overview](#repository-structure-overview)
-    - [Sprint 2](#sprint-2)
+  - [Sprint 2](#sprint-2)
 - [License](#license)
+
 ---
+
 ### Project Status
 
-I used GitHub's [projects](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects) and [issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues) to track tasks I devised by breaking down each assignment's specifications. 
+I utilized GitHub's [projects](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects) and [issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues) to track tasks by breaking down each assignment's specifications.
 
-Also, each PR is associated to a respective issue, and reviewed by [Qodo Merge](https://qodo-merge-docs.qodo.ai/), formerly known as PR-Agent.
+Additionally, each Pull Request (PR) is associated with a respective issue and reviewed by [Qodo Merge](https://qodo-merge-docs.qodo.ai/), formerly known as PR-Agent.
 
-You can view this project's tasks' progress [here](https://github.com/users/georgrybski/projects/3).
+You can view the progress of this project's tasks [here](https://github.com/users/georgrybski/projects/3).
 
 ---
 
-### Sprint Projects, Scripts and Documentation
+### Sprint Projects, Scripts, and Documentation
 - #### [Sprint 2](docs/sprints/sprint2/README.md)
 
 ---
@@ -39,16 +41,15 @@ repository-root/
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
 │   ├── general/
+│   │   ├── cron_vs_systemd_timers.md
 │   │   └── virtualizing_windows_on_kvm.md (TODO)
 │   └── sprint2/
-│       ├── README.md (TODO)
-│       ├── aws_environment_setup.md (TODO)
+│       ├── README.md
 │       ├── check_nginx_health_endpoint.md
 │       ├── check_nginx_system_status.md
-│       ├── deploy_nginx.md (TODO)
-│       ├── schedule_check_doc.md (TODO)
+│       ├── schedule_nginx_health_endpoint_cron.md
+│       ├── schedule_nginx_systemd_timer.md
 │       ├── wsl_installation.md
-│       └── wsl_install_ps1_doc.md (TODO)
 ├── scripts/
 │   └── sprint2/
 │       ├── check_nginx_health_endpoint.sh
@@ -58,7 +59,7 @@ repository-root/
 │       ├── schedule_nginx_systemd_timer.sh
 │       └── wsl_install.ps1 (TODO)
 ├── .gitignore
-└── README.md (WIP)
+└── README.md
 ```
 
 ---
