@@ -10,6 +10,10 @@ The `schedule_nginx_systemd_timer.sh` script automates the scheduling of the `ch
 
 You can read about `check_nginx_system_status.sh` [here](check_nginx_system_status.md).
 
+## Script in Action
+
+https://github.com/user-attachments/assets/02116a6c-8f41-4530-97d4-61538c909a85
+
 ## How to Run
 
 You can quickly download and execute the `schedule_nginx_systemd_timer.sh` script using either `wget` or `curl`. This eliminates the need to manually download the script and make it executable.
