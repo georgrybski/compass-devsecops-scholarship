@@ -25,26 +25,7 @@
 
 ## Installation Steps
 
-<style>
-  .center-video {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px 0;
-  }
-
-  .video-rounded {
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-</style>
-
-<div class="center-video">
-  <video controls width="800" class="video-rounded">
-    <source src="../assets/wsl_ubuntu_setup_tag_along.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-</div>
+https://github.com/georgrybski/compass-devsecops-scholarship/blob/6de39b8cbe92550594ac1fdb633c5f165fb9cb6a/docs/assets/wsl_ubuntu_setup_tag_along.mp4
 
 ### 1. Enable WSL
 
