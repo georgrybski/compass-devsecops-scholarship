@@ -6,13 +6,15 @@
 
 This repo contains the activities done by [me](https://github.com/georgrybski) under a DevSecOps/AWS scholarship by [Compass UOL](https://compass.uol/en/home/) in partnership with [UNINTER International University Center](https://www.uninter.com/centro-universitario/)
 
+---
+
 ### Table of Contents
 - [Project Status](#project-status)
 - [Sprint Projects and Documentation](#sprint-projects-scripts-and-documentation)
 - [Repository Structure Overview](#repository-structure-overview)
     - [Sprint 2](#sprint-2)
 - [License](#license)
-
+---
 ### Project Status
 
 I used GitHub's [projects](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects) and [issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues) to track tasks I devised by breaking down each assignment's specifications. 
@@ -21,8 +23,12 @@ Also, each PR is associated to a respective issue, and reviewed by [Qodo Merge](
 
 You can view this project's tasks' progress [here](https://github.com/users/georgrybski/projects/3).
 
+---
+
 ### Sprint Projects, Scripts and Documentation
 - #### [Sprint 2](docs/sprints/sprint2/README.md)
+
+---
 
 ### Repository Structure Overview
 ```
@@ -37,8 +43,8 @@ repository-root/
 │   └── sprint2/
 │       ├── README.md (TODO)
 │       ├── aws_environment_setup.md (TODO)
-│       ├── check_nginx_health_endpoint.md (TODO)
-│       ├── check_nginx_system_status.md (TODO)
+│       ├── check_nginx_health_endpoint.md
+│       ├── check_nginx_system_status.md
 │       ├── deploy_nginx.md (TODO)
 │       ├── schedule_check_doc.md (TODO)
 │       ├── wsl_installation.md
@@ -54,6 +60,8 @@ repository-root/
 ├── .gitignore
 └── README.md (WIP)
 ```
+
+---
 
 ### License
 
