@@ -49,15 +49,14 @@ repository-root/
 │       ├── check_nginx_system_status.md
 │       ├── schedule_nginx_health_endpoint_cron.md
 │       ├── schedule_nginx_systemd_timer.md
-│       ├── wsl_installation.md
+│       └──  wsl_installation.md
 ├── scripts/
 │   └── sprint2/
 │       ├── check_nginx_health_endpoint.sh
 │       ├── check_nginx_system_status.sh
 │       ├── deploy_nginx.sh
 │       ├── schedule_nginx_health_endpoint_cron.sh
-│       ├── schedule_nginx_systemd_timer.sh
-│       └── wsl_install.ps1 (TODO)
+│       └── schedule_nginx_systemd_timer.sh
 ├── .gitignore
 └── README.md
 ```
