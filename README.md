@@ -1,8 +1,8 @@
-![Project Banner](docs/assets/banner.png)
+![Banner Compass UOL](https://vetores.org/d/compass-uol.svg)
 
 ---
 
-### Compass UOL DevSecOps Scholarship
+## Compass UOL DevSecOps Scholarship
 
 This repo contains the activities done by [me](https://github.com/georgrybski) under a DevSecOps/AWS scholarship by [Compass UOL](https://compass.uol/en/home/) in partnership with [UNINTER International University Center](https://www.uninter.com/centro-universitario/)
 
@@ -32,8 +32,6 @@ repository-root/
 │   │   └── user_story.md
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
-│   ├── assets/
-│   │   └── banner.png (TODO)
 │   ├── general/
 │   │   └── virtualizing_windows_on_kvm.md (TODO)
 │   └── sprint2/
