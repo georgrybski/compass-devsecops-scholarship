@@ -26,7 +26,7 @@ Sprint 2 focuses on automating Nginx monitoring through scripts and scheduling t
 
     - **Documentation:** [schedule_nginx_systemd_timer.md](schedule_nginx_systemd_timer.md)
 
-- **[`wsl_installation.md`](../../docs/sprints/sprint2/wsl_installation.md)**: Documentation on installing Windows Subsystem for Linux (WSL).
+- **[`wsl_installation.md`](../../docs/sprint2/wsl_installation.md)**: Documentation on installing Windows Subsystem for Linux (WSL).
 
 - **[`cron_vs_systemd_timers.md`](../../docs/general/cron_vs_systemd_timers.md)**: Documentation comparing cron jobs and systemd timers.
 
