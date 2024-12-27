@@ -1,3 +1,6 @@
+[![Read in Portuguese](https://img.shields.io/badge/%F0%9F%87%A7%F0%9F%87%B7%20Portugu%C3%AAs-gray.svg)](structured_logging.pt-BR.md)
+[![Read in English](https://img.shields.io/badge/%F0%9F%87%BA%F0%9F%87%B8%20English-F0FFFF.svg)](structured_logging.md)
+
 # Benefits of Structured Logging
 
 Structured logging involves outputting logs in a consistent, machine-readable format (such as JSON) rather than unstructured text. This approach offers several advantages:

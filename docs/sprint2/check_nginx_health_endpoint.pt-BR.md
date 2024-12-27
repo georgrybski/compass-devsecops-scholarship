@@ -1,3 +1,6 @@
+[![Leia em Português](https://img.shields.io/badge/%F0%9F%87%A7%F0%9F%87%B7%20Portugu%C3%AAs-F0FFFF.svg)](check_nginx_health_endpoint.pt-BR.md)
+[![Leia em Inglês](https://img.shields.io/badge/%F0%9F%87%BA%F0%9F%87%B8%20English-gray.svg)](check_nginx_health_endpoint.md)
+
 ## Visão Geral
 
 O script `check_nginx_health_endpoint.sh` verifica o endpoint `/health` do serviço Nginx para garantir que ele está respondendo corretamente. Ele registra os códigos de resposta HTTP para determinar o status de saúde do serviço.

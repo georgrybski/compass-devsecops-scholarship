@@ -1,3 +1,6 @@
+[![Read in Portuguese](https://img.shields.io/badge/%F0%9F%87%A7%F0%9F%87%B7%20Portugu%C3%AAs-gray.svg)](schedule_nginx_health_endpoint_cron.pt-BR.md)
+[![Read in English](https://img.shields.io/badge/%F0%9F%87%BA%F0%9F%87%B8%20English-F0FFFF.svg)](schedule_nginx_health_endpoint_cron.md)
+
 ## Overview
 
 The `schedule_nginx_health_endpoint_cron.sh` script automates the scheduling of the `check_nginx_health_endpoint.sh` script using a cron job. This ensures that the Nginx health endpoint is checked every 5 minutes without manual intervention.

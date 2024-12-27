@@ -1,6 +1,8 @@
 ![Banner Compass UOL](https://vetores.org/d/compass-uol.svg)
 
 ---
+[![Leia em Português](https://img.shields.io/badge/%F0%9F%87%A7%F0%9F%87%B7%20Portugu%C3%AAs-F0FFFF.svg)](README.pt-BR.md)
+[![Leia em Inglês](https://img.shields.io/badge/%F0%9F%87%BA%F0%9F%87%B8%20English-gray.svg)](README.md)
 
 ## Bolsa de Estudos Compass UOL DevSecOps
 

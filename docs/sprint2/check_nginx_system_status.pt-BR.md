@@ -1,3 +1,6 @@
+[![Leia em Português](https://img.shields.io/badge/%F0%9F%87%A7%F0%9F%87%B7%20Portugu%C3%AAs-F0FFFF.svg)](check_nginx_system_status.pt-BR.md)
+[![Leia em Inglês](https://img.shields.io/badge/%F0%9F%87%BA%F0%9F%87%B8%20English-gray.svg)](check_nginx_system_status.md)
+
 ## Visão Geral
 
 O script `check_nginx_system_status.sh` monitora o status do sistema do serviço Nginx em distribuições baseadas em Red Hat e Debian. Ele registra o status do serviço como **online** ou **offline** com um timestamp e uma mensagem personalizada.
