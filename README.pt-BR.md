@@ -6,7 +6,7 @@
 
 ## Programa Bolsas DevSecOps Compass UOL
 
-Este repositório contém as atividades concluídas por [mim](https://github.com/georgrybski) do programa de bolas DevSecOps/AWS da [Compass UOL](https://compass.uol/en/home/) em parceria com o [Centro Universitário UNINTER](https://www.uninter.com/centro-universitario/).
+Este repositório contém as atividades concluídas por [mim](https://github.com/georgrybski) no programa de bolas DevSecOps/AWS da [Compass UOL](https://compass.uol/en/home/) em parceria com o [Centro Universitário UNINTER](https://www.uninter.com/centro-universitario/).
 
 ---
 
