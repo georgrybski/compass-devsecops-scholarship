@@ -98,7 +98,7 @@ Each log entry is a **structured log** in JSON format and includes the following
 - `instance_id`: AWS EC2 instance ID (if applicable).
 - `region`: AWS region (if applicable).
 
-For more information on the benefits of structured logging, refer to the [Benefits of Structured Logging](#benefits-of-structured-logging) section.
+You can read more about structured logging [here](../general/structured_logging.md).
 
 #### Example Log Entry
 
