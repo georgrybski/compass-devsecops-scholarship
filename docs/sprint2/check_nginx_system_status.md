@@ -9,6 +9,10 @@ The `check_nginx_system_status.sh` script monitors the system status of the Ngin
 - **Customization:** Includes timestamps, service names, statuses, and personalized messages.
 - **Dependency Management:** Ensures required dependencies (`jq` and `ec2-metadata`) are installed.
 
+## Script in action
+
+https://github.com/user-attachments/assets/746c8913-783b-46ce-a887-335dc9d353a4
+
 ## How to Run
 
 You can quickly download and execute the `check_nginx_system_status.sh` script using either `wget` or `curl`. This eliminates the need to manually download the script and make it executable.
