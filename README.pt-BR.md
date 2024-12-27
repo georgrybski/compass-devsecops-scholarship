@@ -21,11 +21,11 @@ Este repositório contém as atividades concluídas por [mim](https://github.com
 
 ### Status do Projeto
 
-Utilizei os [projetos](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects) e [issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues) do GitHub para acompanhar as tarefas, detalhando as especificações de cada atribuição.
+Utilizei os [projetos](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects) e [issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues) do GitHub para acompanhar as tarefas, detalhando os requisitos e especirficações de cada task.
 
-Além disso, cada Pull Request (PR) está associada a uma issue respectiva e revisada pelo [Qodo Merge](https://qodo-merge-docs.qodo.ai/), anteriormente conhecido como PR-Agent.
+Além disso, cada Pull Request (PR) está associada a uma respectiva issue e revisada pelo [Qodo Merge](https://qodo-merge-docs.qodo.ai/) (anteriormente conhecido como PR-Agent).
 
-Você pode ver o progresso das tarefas deste projeto [aqui](https://github.com/users/georgrybski/projects/3).
+Você pode ver o progresso das tasks deste projeto [aqui](https://github.com/users/georgrybski/projects/3).
 
 ---
 
