@@ -11,7 +11,9 @@ The `check_nginx_system_status.sh` script monitors the system status of the Ngin
 
 ## Script in action
 
-https://github.com/user-attachments/assets/746c8913-783b-46ce-a887-335dc9d353a4
+https://github.com/user-attachments/assets/c52ebd56-349b-44a4-a137-3a28e5dc144f
+
+
 
 ## How to Run
 
