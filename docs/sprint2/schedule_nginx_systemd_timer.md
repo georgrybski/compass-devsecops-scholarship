@@ -1,3 +1,6 @@
+[![Read in Portuguese](https://img.shields.io/badge/%F0%9F%87%A7%F0%9F%87%B7%20Portugu%C3%AAs-gray.svg)](schedule_nginx_systemd_timer.pt-BR.md)
+[![Read in English](https://img.shields.io/badge/%F0%9F%87%BA%F0%9F%87%B8%20English-F0FFFF.svg)](schedule_nginx_systemd_timer.md)
+
 ## Overview
 
 The `schedule_nginx_systemd_timer.sh` script automates the scheduling of the `check_nginx_system_status.sh` script using a systemd timer. This ensures that the Nginx system status is checked every 5 minutes without manual intervention.

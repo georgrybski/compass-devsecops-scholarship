@@ -13,8 +13,6 @@ The `check_nginx_system_status.sh` script monitors the system status of the Ngin
 
 https://github.com/user-attachments/assets/c52ebd56-349b-44a4-a137-3a28e5dc144f
 
-
-
 ## How to Run
 
 You can quickly download and execute the `check_nginx_system_status.sh` script using either `wget` or `curl`. This eliminates the need to manually download the script and make it executable.
@@ -22,8 +20,8 @@ You can quickly download and execute the `check_nginx_system_status.sh` script u
 #### Using wget:
 
 ```bash
-    wget -qO- https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_system_status.sh \
-    | sudo bash -s -- -v
+  wget -qO- https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/check_nginx_system_status.sh \
+  | sudo bash -s -- -v
 ```
 
 #### Using curl:

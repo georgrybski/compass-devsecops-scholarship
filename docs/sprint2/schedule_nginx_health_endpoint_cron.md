@@ -1,3 +1,6 @@
+[![Read in Portuguese](https://img.shields.io/badge/%F0%9F%87%A7%F0%9F%87%B7%20Portugu%C3%AAs-gray.svg)](schedule_nginx_health_endpoint_cron.pt-BR.md)
+[![Read in English](https://img.shields.io/badge/%F0%9F%87%BA%F0%9F%87%B8%20English-F0FFFF.svg)](schedule_nginx_health_endpoint_cron.md)
+
 ## Overview
 
 The `schedule_nginx_health_endpoint_cron.sh` script automates the scheduling of the `check_nginx_health_endpoint.sh` script using a cron job. This ensures that the Nginx health endpoint is checked every 5 minutes without manual intervention.
@@ -22,14 +25,14 @@ You can quickly download and execute the `schedule_nginx_health_endpoint_cron.sh
 
 ```bash
   wget -qO- https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/schedule_nginx_health_endpoint_cron.sh \
-  | sudo bash -s -- http://localhost --user user
+  | sudo bash -s --address http://localhost --user user
 ```
 
 #### Using curl:
 
 ```bash
   curl -sL https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/schedule_nginx_health_endpoint_cron.sh \
-  | sudo bash -s -- http://localhost --user user
+  | sudo bash -s --address http://localhost --user user
 ```
 
 #### Explanation of the Command
@@ -38,7 +41,7 @@ You can quickly download and execute the `schedule_nginx_health_endpoint_cron.sh
     - These commands fetch the script from the specified URL without saving it to a file.
     - The `-qO-` flag in `wget` and `-sL` in `curl` ensure the output is sent directly to the terminal.
 
-- ```| sudo bash -s -- http://localhost```:
+- ```| sudo bash -s --```:
     - This pipes the script output into `bash`, allowing the script to run with `sudo` privileges.
     - The `\` character at the end of the first line is used to break the command into multiple lines for better readability. It tells the shell that the command continues on the next line.
 
