@@ -14,7 +14,7 @@ The `deploy_nginx.sh` script automates the installation and configuration of the
 
 ## Script in Action
 
-![Script Execution](https://github.com/user-attachments/assets/deploy_nginx_execution.png)
+https://github.com/user-attachments/assets/7e9c4dbb-f49f-44aa-ac87-759b41956ffb
 
 ## How to Run
 
