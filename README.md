@@ -28,7 +28,7 @@ You can view the progress of this project's tasks [here](https://github.com/user
 ---
 
 ### Sprint Projects, Scripts, and Documentation
-- #### [Sprint 2](docs/sprints/sprint2/README.md)
+- #### [Sprint 2](docs/sprint2/README.md)
 
 ---
 
