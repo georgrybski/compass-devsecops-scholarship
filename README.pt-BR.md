@@ -13,8 +13,8 @@ Este repositório contém as atividades concluídas por [mim](https://github.com
 ### Índice
 - [Status do Projeto](#status-do-projeto)
 - [Projetos da Sprint, Scripts e Documentação](#projetos-da-sprint-scripts-e-documentação)
+  - [Sprint 2](#sprint-2)
 - [Visão Geral da Estrutura do Repositório](#visão-geral-da-estrutura-do-repositório)
-    - [Sprint 2](#sprint-2)
 - [Licença](#licença)
 
 ---

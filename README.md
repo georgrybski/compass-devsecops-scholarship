@@ -14,8 +14,8 @@ This repository contains the activities completed by [me](https://github.com/geo
 ### Table of Contents
 - [Project Status](#project-status)
 - [Sprint Projects, Scripts, and Documentation](#sprint-projects-scripts-and-documentation)
-- [Repository Structure Overview](#repository-structure-overview)
   - [Sprint 2](#sprint-2)
+- [Repository Structure Overview](#repository-structure-overview)
 - [License](#license)
 
 ---
