@@ -16,7 +16,7 @@ Para a automatização da execução dos scripts, utilizei tanto cron e o timer 
 
 - Deployment e configuração do Nginx, com redirecionamento e um endpoint de `/health` para posterior monitoramento:
   - **Script:** **[deploy_nginx.sh](../../scripts/sprint2/deploy_nginx.sh)**
-  - **Documentação:** [deploy_nginx.pt-BR.md](deploy_nginx.pt-BR.md)
+  - **Documentação:** **[deploy_nginx.pt-BR.md](deploy_nginx.pt-BR.md)**
 
 
 - Armazenar logs estruturardos com base no status do serviço do Nginx:
