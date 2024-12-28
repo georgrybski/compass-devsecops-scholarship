@@ -21,7 +21,7 @@ Este repositório contém as atividades concluídas por [mim](https://github.com
 
 ### Status do Projeto
 
-Utilizei os [projetos](https://docs.github.com/pt/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects) e [issues](https://docs.github.com/pt/issues/tracking-your-work-with-issues/about-issues) do GitHub para acompanhar as tarefas, detalhando os requisitos e especirficações de cada task.
+Utilizei os [projetos](https://docs.github.com/pt/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects) e [issues](https://docs.github.com/pt/issues/tracking-your-work-with-issues/about-issues) do GitHub para acompanhar as tarefas, detalhando os requisitos e especificações de cada task.
 
 Além disso, cada Pull Request (PR) está associada a uma respectiva issue e revisada pelo [Qodo Merge](https://qodo-merge-docs.qodo.ai/) (anteriormente conhecido como PR-Agent).
 
