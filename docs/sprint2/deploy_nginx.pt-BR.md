@@ -1,5 +1,5 @@
-[![Leia em Português](https://img.shields.io/badge/%F0%9F%87%A7%F0%9F%87%B7%20Portugu%C3%AAs-F0FFFF.svg)](README.pt-BR.md)
-[![Leia em Inglês](https://img.shields.io/badge/%F0%9F%87%BA%F0%9F%87%B8%20English-gray.svg)](README.md)
+[![Leia em Português](https://img.shields.io/badge/%F0%9F%87%A7%F0%9F%87%B7%20Portugu%C3%AAs-F0FFFF.svg)](deploy_nginx.pt-BR.md)
+[![Leia em Inglês](https://img.shields.io/badge/%F0%9F%87%BA%F0%9F%87%B8%20English-gray.svg)](deploy_nginx.md)
 
 ## Visão Geral
 
@@ -12,7 +12,7 @@ O script `deploy_nginx.sh` automatiza a instalação e configuração do servido
 - **Gerenciamento de Serviços:** Garante que o Nginx seja habilitado e iniciado para aplicar as configurações.
 - **Flexibilidade:** Suporta os gerenciadores de pacotes `apt` e `dnf` para instalação.
 
-## Script in Action
+## Script em Ação
 
 https://github.com/user-attachments/assets/7e9c4dbb-f49f-44aa-ac87-759b41956ffb
 
