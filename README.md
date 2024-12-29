@@ -44,23 +44,30 @@ repository-root/
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
 │   ├── general/
-│   │   ├── cron_vs_systemd_timers.md
-│   │   ├── cron_vs_systemd_timers.pt-BR.md
-│   │   ├── structured_logging.md
-│   │   └── structured_logging.pt-BR.md
+│   │   ├── cron_vs_systemd_timers/
+│   │   │   ├── cron_vs_systemd_timers.md
+│   │   │   └── cron_vs_systemd_timers.pt-BR.md
+│   │   └── structured_logging/
+│   │       ├── structured_logging.md
+│   │       └── structured_logging.pt-BR.md
 │   └── sprint2/
 │       ├── README.md
 │       ├── README.pt-BR.md
-│       ├── check_nginx_health_endpoint.md
-│       ├── check_nginx_health_endpoint.pt-BR.md
-│       ├── check_nginx_system_status.md
-│       ├── check_nginx_system_status.pt-BR.md
-│       ├── schedule_nginx_health_endpoint_cron.md
-│       ├── schedule_nginx_health_endpoint_cron.pt-BR.md
-│       ├── schedule_nginx_systemd_timer.md
-│       ├── schedule_nginx_systemd_timer.pt-BR.md
-│       ├── wsl_installation.md
-│       └── wsl_installation.pt-BR.md
+│       ├── check_nginx_health_endpoint/
+│       │   ├── check_nginx_health_endpoint.md
+│       │   └── check_nginx_health_endpoint.pt-BR.md
+│       ├── check_nginx_system_status/
+│       │   ├── check_nginx_system_status.md
+│       │   └── check_nginx_system_status.pt-BR.md
+│       ├── schedule_nginx_health_endpoint_cron/
+│       │   ├── schedule_nginx_health_endpoint_cron.md
+│       │   └── schedule_nginx_health_endpoint_cron.pt-BR.md
+│       ├── schedule_nginx_systemd_timer/
+│       │   ├── schedule_nginx_systemd_timer.md
+│       │   └── schedule_nginx_systemd_timer.pt-BR.md
+│       └── wsl_installation/
+│           ├── wsl_installation.md
+│           └── wsl_installation.pt-BR.md
 ├── scripts/
 │   └── sprint2/
 │       ├── check_nginx_health_endpoint.sh

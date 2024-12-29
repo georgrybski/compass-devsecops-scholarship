@@ -11,7 +11,7 @@ O script `schedule_nginx_systemd_timer.sh` automatiza o agendamento do script `c
 - **Confiabilidade:** Utiliza as robustas capacidades de agendamento do systemd para garantir a execução consistente.
 - **Registro de Logs:** Mantém logs do timer e do status do serviço para monitoramento e solução de problemas.
 
-Você pode ler sobre `check_nginx_system_status.sh` [aqui](check_nginx_system_status.pt-BR.md).
+Você pode ler sobre `check_nginx_system_status.sh` [aqui](../check_nginx_system_status/check_nginx_system_status.pt-BR.md).
 
 ## Script em Ação
 
@@ -123,6 +123,6 @@ Este script configura um timer do systemd para automatizar a execução do scrip
 - [Documentação Oficial do Nginx](https://nginx.org/en/docs/)
 - [Manual do jq](https://stedolan.github.io/jq/manual/)
 - [Documentação de Timers do Systemd](https://www.freedesktop.org/software/systemd/man/systemd.timer.html)
-- [Cron vs Systemd Timers](../general/cron_vs_systemd_timers.pt-BR.md)
+- [Cron vs Systemd Timers](../../general/cron_vs_systemd_timers/cron_vs_systemd_timers.pt-BR.md)
 
 ---

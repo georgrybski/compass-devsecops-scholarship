@@ -12,7 +12,7 @@ O script `deploy_nginx.sh` automatiza a instalação e configuração do servido
 - **Gerenciamento de Serviços:** Garante que o Nginx seja habilitado e iniciado para aplicar as configurações.
 - **Flexibilidade:** Suporta os gerenciadores de pacotes `apt` e `dnf` para instalação.
 
-## Script em Ação
+## Script in Action
 
 https://github.com/user-attachments/assets/7e9c4dbb-f49f-44aa-ac87-759b41956ffb
 
