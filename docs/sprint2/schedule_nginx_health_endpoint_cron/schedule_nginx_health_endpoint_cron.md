@@ -11,7 +11,7 @@ The `schedule_nginx_health_endpoint_cron.sh` script automates the scheduling of 
 - **Reliability:** Utilizes cron's scheduling capabilities to ensure consistent execution.
 - **Logging:** Maintains logs of the cron job executions for monitoring and troubleshooting.
 
-You can read about `check_nginx_health_endpoint.sh` [here](check_nginx_health_endpoint.md).
+You can read about `check_nginx_health_endpoint.sh` [here](../check_nginx_health_endpoint/check_nginx_health_endpoint.md).
 
 ## Script in Action
 
@@ -122,6 +122,6 @@ This script sets up a cron job to automate the execution of the `check_nginx_hea
 - [jq Manual](https://stedolan.github.io/jq/manual/)
 - [Curl Documentation](https://curl.se/docs/manpage.html)
 - [Cron Documentation](https://man7.org/linux/man-pages/man5/crontab.5.html)
-- [Cron vs Systemd Timers](../general/cron_vs_systemd_timers.md)
+- [Cron vs Systemd Timers](../../general/cron_vs_systemd_timers/cron_vs_systemd_timers.md)
 
 ---

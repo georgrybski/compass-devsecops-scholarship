@@ -15,30 +15,30 @@ For automating the execution of the scripts, I used both cron and the systemd ti
 
 - Deployment and configuration of Nginx, with redirection and a `/health` endpoint for subsequent monitoring:
   - **Script:** **[deploy_nginx.sh](../../scripts/sprint2/deploy_nginx.sh)**
-  - **Documentation:** **[deploy_nginx.md](deploy_nginx.md)**
+  - **Documentation:** **[deploy_nginx.md](deploy_nginx/deploy_nginx.md)**
 
 
 - Storing structured logs based on the Nginx service status:
   - **Script:** **[check_nginx_system_status.sh](../../scripts/sprint2/check_nginx_system_status.sh)**
-  - **Documentation:** **[check_nginx_system_status.md](check_nginx_system_status.md)**
+  - **Documentation:** **[check_nginx_system_status.md](check_nginx_system_status/check_nginx_system_status.md)**
 
 
 - Storing structured logs based on the response from the `/health` endpoint configured in Nginx:
   - **Script:** **[check_nginx_health_endpoint.sh](../../scripts/sprint2/check_nginx_health_endpoint.sh)**
-  - **Documentation:** **[check_nginx_health_endpoint.md](check_nginx_health_endpoint.md)**
+  - **Documentation:** **[check_nginx_health_endpoint.md](check_nginx_health_endpoint/check_nginx_health_endpoint.md)**
 
 
 - Scheduling the verification of the Nginx health endpoint using cron:
   - **Script:** **[schedule_nginx_health_endpoint_cron.sh](../../scripts/sprint2/schedule_nginx_health_endpoint_cron.sh)**
-  - **Documentation:** **[schedule_nginx_health_endpoint_cron.md](schedule_nginx_health_endpoint_cron.md)**
+  - **Documentation:** **[schedule_nginx_health_endpoint_cron.md](schedule_nginx_health_endpoint_cron/schedule_nginx_health_endpoint_cron.md)**
 
 
 - Scheduling the verification of the Nginx system status every 5 minutes using systemd:
   - **Script:** **[schedule_nginx_systemd_timer.sh](../../scripts/sprint2/schedule_nginx_systemd_timer.sh)**
-  - **Documentation:** **[schedule_nginx_systemd_timer.md](schedule_nginx_systemd_timer.md)**
+  - **Documentation:** **[schedule_nginx_systemd_timer.md](schedule_nginx_systemd_timer/schedule_nginx_systemd_timer.md)**
 
 
-- Documentation on installing the Windows Subsystem for Linux (WSL): **[wsl_installation.md](../../docs/sprint2/wsl_installation.md)**
+- Documentation on installing the Windows Subsystem for Linux (WSL): **[wsl_installation.md](wsl_installation/wsl_installation.md)**
 
 
-- Documentation comparing cron jobs and systemd timers: **[cron_vs_systemd_timers.md](../../docs/general/cron_vs_systemd_timers.md)**
+- Documentation comparing cron jobs and systemd timers: **[cron_vs_systemd_timers.md](../general/cron_vs_systemd_timers/cron_vs_systemd_timers.md)**

@@ -102,7 +102,7 @@ Cada entrada de log é um **log estruturado** em formato JSON e inclui os seguin
 - `instance_id`: ID da instância AWS EC2 (se aplicável).
 - `region`: Região AWS (se aplicável).
 
-Você pode ler mais sobre logging estruturado [aqui](../general/structured_logging.pt-BR.md).
+Você pode ler mais sobre logging estruturado [aqui](../../general/structured_logging/structured_logging.pt-BR.md).
 
 #### Exemplo de Entrada de Log
 
