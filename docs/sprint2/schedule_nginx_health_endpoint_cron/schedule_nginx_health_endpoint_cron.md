@@ -25,14 +25,14 @@ You can quickly download and execute the `schedule_nginx_health_endpoint_cron.sh
 
 ```bash
   wget -qO- https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/schedule_nginx_health_endpoint_cron.sh \
-  | sudo bash -s --address http://localhost --user user
+  | sudo bash -s -- --address http://localhost --user user
 ```
 
 #### Using curl:
 
 ```bash
   curl -sL https://raw.githubusercontent.com/georgrybski/compass-devsecops-scholarship/main/scripts/sprint2/schedule_nginx_health_endpoint_cron.sh \
-  | sudo bash -s --address http://localhost --user user
+  | sudo bash -s -- --address http://localhost --user user
 ```
 
 #### Explanation of the Command
