@@ -1,103 +1,69 @@
 #!/bin/bash
-set -euo pipefail
+set -e
 
-EFS_VOLUME="/mnt/efs"
-WORDPRESS_VOLUME="/var/www/html"
+DATABASE_HOST="your-db-host.yourdomain.region.rds.amazonaws.com"
+DATABASE_USER="your-db-user"
+DATABASE_PASSWORD="your-db-password"
+DATABASE_NAME="your-db-name"
+EFS_DNS="your-efs-id.efs.your-region.amazonaws.com"
 
-DATABASE_HOST="database_host"
-DATABASE_USER="database_user"
-DATABASE_PASSWORD="database_password"
-DATABASE_NAME="database_name"
-
-EFS_DNS="efs_dns"
-
-DOCKER_COMPOSE_PATH="/bin/docker-compose"
-COMPOSE_FILE="/home/ec2-user/docker-compose.yaml"
-DOCKER_COMPOSE_URL="https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)"
-
-NFS_OPTIONS="nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=1000,retrans=2,noresvport"
-
-
-prepare_volume_dir() {
-  echo "Creating mount directory: $EFS_VOLUME..." &&
-  sudo mkdir -p "$EFS_VOLUME" ||
-    { echo "Error: Failed to create directory $EFS_VOLUME"; return 1; }
+update_system() {
+    sudo yum update -y
+    sudo yum upgrade -y
 }
 
-is_volume_mounted() {
-  mountpoint -q "$EFS_VOLUME"
-}
-
-do_mount() {
-  echo "Mounting EFS volume..." &&
-  sudo mount -t nfs4 -o "$NFS_OPTIONS" "${EFS_DNS}:/ " "$EFS_VOLUME" ||
-    { echo "Error: Failed to mount EFS volume"; return 1; }
-}
-
-set_volume_permissions() {
-  echo "Setting permissions for EFS volume..." &&
-  sudo chown -R 33:33 "$EFS_VOLUME" &&
-  sudo chmod -R 775 "$EFS_VOLUME" ||
-    { echo "Error: Failed to set permissions on $EFS_VOLUME"; return 1; }
+install_dependencies() {
+    sudo yum install -y amazon-efs-utils docker
 }
 
 mount_efs() {
-  echo "Setting up EFS volume..." &&
-  prepare_volume_dir &&
-  ( is_volume_mounted && echo "EFS volume already mounted." || do_mount ) &&
-  set_volume_permissions
+    mkdir -p /mnt/efs
+    sudo mount -t efs -o tls "${EFS_DNS}":/ /mnt/efs
 }
 
-update_system() {
-  echo "Updating system and installing dependencies..." &&
-  sudo yum update -y &&
-  sudo yum install -y docker amazon-efs-utils
-}
-
-configure_docker() {
-  echo "Configuring Docker..." &&
-  sudo usermod -aG docker "$(whoami)" &&
-  sudo systemctl start docker &&
-  sudo systemctl enable docker
+setup_docker() {
+    sudo usermod -a -G docker ec2-user
+    newgrp docker
+    sudo systemctl enable docker.service
+    sudo systemctl start docker.service
 }
 
 install_docker_compose() {
-  echo "Installing Docker Compose..." &&
-  curl -L "$DOCKER_COMPOSE_URL" -o "$DOCKER_COMPOSE_PATH" &&
-  sudo chmod +x "$DOCKER_COMPOSE_PATH"
+    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
 }
 
 create_docker_compose_file() {
-  echo "Creating Docker Compose file at $COMPOSE_FILE..." &&
-  cat <<EOL | sudo tee "$COMPOSE_FILE" > /dev/null
-version: '3.8'
+    cat <<EOF | sudo tee /home/ec2-user/docker-compose.yml > /dev/null
 services:
   wordpress:
     image: wordpress:latest
-    volumes:
-      - ${EFS_VOLUME}${WORDPRESS_VOLUME}:/${WORDPRESS_VOLUME}
     ports:
       - "80:80"
     environment:
-      WORDPRESS_DB_HOST: ${DATABASE_HOST}
-      WORDPRESS_DB_USER: ${DATABASE_USER}
-      WORDPRESS_DB_PASSWORD: ${DATABASE_PASSWORD}
-      WORDPRESS_DB_NAME: ${DATABASE_NAME}
-EOL
+      WORDPRESS_DB_HOST: "${DATABASE_HOST}"
+      WORDPRESS_DB_USER: "${DATABASE_USER}"
+      WORDPRESS_DB_PASSWORD: "${DATABASE_PASSWORD}"
+      WORDPRESS_DB_NAME: "${DATABASE_NAME}"
+    volumes:
+      - /mnt/efs/wp-content:/var/www/html/wp-content
+    restart: always
+EOF
 }
 
-run_docker_compose() {
-  echo "Starting Docker Compose services..." &&
-  sudo docker-compose -f "$COMPOSE_FILE" up -d
+deploy_wordpress() {
+    cd /home/ec2-user
+    docker-compose up -d
 }
 
 main() {
-  update_system &&
-  configure_docker &&
-  mount_efs &&
-  install_docker_compose &&
-  create_docker_compose_file &&
-  run_docker_compose
+    update_system
+    install_dependencies
+    mount_efs
+    setup_docker
+    install_docker_compose
+    create_docker_compose_file
+    deploy_wordpress
 }
 
 main
