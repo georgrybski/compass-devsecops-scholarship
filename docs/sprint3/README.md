@@ -5,6 +5,8 @@
 
 # Sprint 3: AWS Docker – Deploying WordPress on AWS
 
+![Screenshot From 2025-02-05 23-21-41](https://github.com/user-attachments/assets/d7f766d9-8ae0-4898-a7d5-ab6aecbbc832)
+
 This Sprint demonstrates a complete DevSecOps workflow to deploy a scalable WordPress application on AWS using Docker. The activity covers:
 
 - **Docker Installation:** Automatically set up on EC2 (via a `user_data.sh` script).
