@@ -5,6 +5,8 @@
 
 # Sprint 3: AWS Docker – Implantando o WordPress na AWS
 
+![Screenshot From 2025-02-05 23-21-41](https://github.com/user-attachments/assets/8c655b10-3d3e-4f50-9b03-38e717c37db1)
+
 Esta Sprint demonstra um fluxo completo DevSecOps para implantar uma aplicação WordPress escalável na AWS utilizando Docker. A atividade abrange:
 
 - **Instalação do Docker:** Configuração automática em instâncias EC2 (via script `user_data.sh`).
