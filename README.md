@@ -16,7 +16,7 @@ This repository contains the activities completed by [me](https://github.com/geo
 - [Sprint Projects, Scripts, and Documentation](#sprint-projects-scripts-and-documentation)
   - [Linux - Sprint 2](#linux---sprint-2)
   - [Docker - Sprint 3](#docker---sprint-3)
-  - [Migração - Spring 4](#docker---sprint-3)
+  - [Migração - Spring 4](#migration---sprint-4)
 - [Repository Structure Overview](#repository-structure-overview)
 - [License](#license)
 
@@ -35,7 +35,7 @@ You can view the progress of this project's tasks [here](https://github.com/user
 ### Sprint Projects, Scripts, and Documentation
 - #### [Linux - Sprint 2](docs/sprint2/README.md)
 - #### [Docker - Sprint 3](docs/sprint3/README.md)
-- #### [Migração - Spring 4](docs/sprint4/budget-projeto-final.pt-BR.md)
+- #### [Migration - Sprint 4](docs/sprint4/README.md)
 
 ---
 
@@ -75,25 +75,31 @@ repository-root/
 │   │   └── wsl_installation/
 │   │       ├── wsl_installation.md
 │   │       └── wsl_installation.pt-BR.md
-│   └── sprint3/
-│       ├── aws_infrastructure/
-│       │   ├── aws_infrastructure.md
-│       │   └── aws_infrastructure.pt-BR.md
-│       ├── docker_setup/
-│       │   ├── docker_setup.md
-│       │   └── docker_setup.pt-BR.md
-│       ├── lb_autoscaling/
-│       │   ├── lb_autoscaling.md
-│       │   └── lb_autoscaling.pt-BR.md
-│       ├── references/
-│       │   ├── references.md
-│       │   └── references.pt-BR.md
-│       ├── troubleshooting/
-│       │   ├── troubleshooting.md
-│       │   └── troubleshooting.pt-BR.md
-│       ├── wordpress_deployment/
-│       │   ├── wordpress_deployment.md
-│       │   └── wordpress_deployment.pt-BR.md
+│   ├── sprint3/
+│   │   ├── aws_infrastructure/
+│   │   │   ├── aws_infrastructure.md
+│   │   │   └── aws_infrastructure.pt-BR.md
+│   │   ├── docker_setup/
+│   │   │   ├── docker_setup.md
+│   │   │   └── docker_setup.pt-BR.md
+│   │   ├── lb_autoscaling/
+│   │   │   ├── lb_autoscaling.md
+│   │   │   └── lb_autoscaling.pt-BR.md
+│   │   ├── references/
+│   │   │   ├── references.md
+│   │   │   └── references.pt-BR.md
+│   │   ├── troubleshooting/
+│   │   │   ├── troubleshooting.md
+│   │   │   └── troubleshooting.pt-BR.md
+│   │   ├── wordpress_deployment/
+│   │   │   ├── wordpress_deployment.md
+│   │   │   └── wordpress_deployment.pt-BR.md
+│   │   ├── README.md
+│   │   └── README.pt-BR.md
+│   └── sprint4/
+│       ├── final_project_budget/
+│       │   ├── final_project_budget.md
+│       │   └── final_project_budget.pt-BR.md
 │       ├── README.md
 │       └── README.pt-BR.md
 ├── scripts/
